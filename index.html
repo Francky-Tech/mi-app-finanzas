@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ahorrapp</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111827;
+      color: white;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    input, select, button {
+      margin: 5px;
+      padding: 8px;
+    }
+
+    li {
+      background: white;
+      margin: 5px 0;
+      padding: 10px;
+      border-radius: 5px;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .card {
+      background: #1f2937;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+    }
+
+    .card h2, .card h3 {
+      margin-top: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Control de Gastos</h1>
+
+    <!-- FORMULARIO: Agregar gasto -->
+    <div class="card">
+      <h3>Agregar movimiento</h3>
+      <input type="text" id="descripcion" placeholder="Descripción">
+      <input type="number" id="monto" placeholder="Monto">
+      <input type="date" id="fecha">
+
+      <select id="tipo">
+        <option value="ingreso">Ingreso</option>
+        <option value="gasto">Egreso</option>
+      </select>
+
+      <select id="categoria">
+        <option value="comida">Comida</option>
+        <option value="transporte">Transporte</option>
+        <option value="servicios">Servicios</option>
+        <option value="educacion">Educación</option>
+        <option value="salud">Salud</option>
+        <option value="deportes">Deportes</option>
+        <option value="ocio">Ocio</option>
+        <option value="otros">Otros</option>
+      </select>
+
+      <button id="btnAgregar" onclick="agregarGasto()">Agregar</button>
+      <button id="btnCancelarEdicion" onclick="cancelarEdicion()" style="display:none; background:#ef4444;">✖ Cancelar edición</button>
+    </div>
+
+    <!-- LÍMITE DE OCIO -->
+    <div class="card">
+      <h3>Límite de ocio mensual</h3>
+      <input type="number" id="limiteOcio" placeholder="Límite ocio mensual">
+      <button onclick="guardarLimite()">Guardar límite</button>
+      <p>Límite actual: $<span id="mostrarLimite">0</span></p>
+    </div>
+
+    <!-- RESUMEN MENSUAL -->
+    <div class="card">
+      <h3>📅 Resumen mensual</h3>
+      <input type="month" id="filtroMes">
+      <button onclick="mostrarResumenMensual()">Ver resumen</button>
+      <div id="resumenMensual" style="display:none; margin-top:10px;"></div>
+    </div>
+
+    <!-- TOTAL -->
+    <div class="card">
+      <h2>Total: <span id="total">$0</span></h2>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="card">
+      <h3>Filtrar movimientos</h3>
+      <label>Por fecha:</label>
+      <input type="date" id="filtroFecha" onchange="filtrarPorFecha()">
+      <label>Por categoría:</label>
+      <select id="filtroCategoria" onchange="filtrarPorCategoria()">
+        <option value="">Todas las categorías</option>
+        <option value="comida">Comida</option>
+        <option value="transporte">Transporte</option>
+        <option value="servicios">Servicios</option>
+        <option value="educacion">Educación</option>
+        <option value="salud">Salud</option>
+        <option value="deportes">Deportes</option>
+        <option value="ocio">Ocio</option>
+        <option value="otros">Otros</option>
+      </select>
+      <button onclick="limpiarFiltros()">🧹 Limpiar filtros</button>
+    </div>
+
+    <!-- META DE AHORRO -->
+    <div class="card">
+      <h3>🎯 Meta de ahorro</h3>
+      <input type="text"   id="metaNombre"        placeholder="Nombre de la meta (ej: Viaje, PC)">
+      <input type="number" id="metaTotal"          placeholder="Monto total a ahorrar">
+      <input type="number" id="metaCuotaSemanal"   placeholder="Cuota semanal (opcional)">
+      <input type="number" id="metaCuotaMensual"   placeholder="Cuota mensual (opcional)">
+      <button onclick="guardarMeta()">💾 Guardar meta</button>
+      <button onclick="verificarAlertaMeta()">🔔 Verificar alertas</button>
+
+      <!-- Panel de progreso -->
+      <div id="metaPanel" style="display:none; margin-top:12px;"></div>
+
+      <!-- Abonar -->
+      <div style="margin-top:12px;">
+        <input type="number" id="abonoMeta" placeholder="Monto a abonar">
+        <button onclick="abonarMeta()">➕ Abonar</button>
+      </div>
+    </div>
+
+    <!-- GRÁFICAS -->
+    <div class="card">
+      <h3>Ingresos vs Gastos</h3>
+      <canvas id="grafica" width="400" height="200"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Gastos por categoría</h3>
+      <canvas id="graficaCategorias" width="400" height="200"></canvas>
+    </div>
+
+    <!-- LISTA DE MOVIMIENTOS -->
+    <div class="card">
+      <h3>Movimientos</h3>
+      <ul id="lista"></ul>
+    </div>
+
+  </div>
+
+  <!-- Chart.js PRIMERO, luego app.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
