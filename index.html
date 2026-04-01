@@ -4,164 +4,603 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ahorrapp</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f172a;
+      --surface:   #1e293b;
+      --surface2:  #263348;
+      --border:    #334155;
+      --text:      #f1f5f9;
+      --text2:     #94a3b8;
+      --green:     #10b981;
+      --red:       #ef4444;
+      --blue:      #3b82f6;
+      --yellow:    #f59e0b;
+      --purple:    #8b5cf6;
+      --orange:    #f97316;
+      --cyan:      #06b6d4;
+      --radius:    12px;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      background: #111827;
-      color: white;
-      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
     }
 
-    h1 {
-      text-align: center;
-    }
-
-    input, select, button {
-      margin: 5px;
-      padding: 8px;
-    }
-
-    li {
-      background: white;
-      margin: 5px 0;
-      padding: 10px;
-      border-radius: 5px;
-      list-style: none;
+    /* ── HEADER ── */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
       display: flex;
+      align-items: center;
       justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-title { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+    .saved-badge {
+      font-size: 11px;
+      color: var(--green);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0.8;
     }
 
-    .container {
-      max-width: 800px;
-      margin: auto;
+    /* ── NAV ── */
+    .nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      padding: 0 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .nav::-webkit-scrollbar { display: none; }
+    .nav-tab {
+      padding: 13px 18px;
+      cursor: pointer;
+      color: var(--text2);
+      font-size: 13px;
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: color .15s, border-color .15s;
+      user-select: none;
+    }
+    .nav-tab:hover { color: var(--text); }
+    .nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+    /* ── MAIN ── */
+    .main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 24px 16px 60px;
     }
 
+    /* ── TABS ── */
+    .tab-section { display: none; }
+    .tab-section.active { display: block; }
+
+    /* ── CARD ── */
     .card {
-      background: #1f2937;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text);
     }
 
-    .card h2, .card h3 {
-      margin-top: 0;
+    /* ── STATS ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .stat-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+    .stat-value { font-size: 22px; font-weight: 700; }
+
+    /* ── FORM ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-label { font-size: 11px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: .4px; }
+
+    input, select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 9px 12px;
+      font-size: 13px;
+      width: 100%;
+      transition: border-color .15s;
+      appearance: none;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--blue); }
+    input[type="color"] { padding: 4px 6px; height: 40px; cursor: pointer; }
+    select option { background: #1e293b; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      border-radius: 8px;
+      border: none;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: filter .15s, transform .1s;
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn:hover { filter: brightness(1.1); }
+    .btn-primary  { background: var(--blue);    color: #fff; }
+    .btn-success  { background: var(--green);   color: #fff; }
+    .btn-danger   { background: var(--red);     color: #fff; }
+    .btn-warning  { background: var(--yellow);  color: #111; }
+    .btn-ghost    { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-sm       { padding: 6px 12px; font-size: 12px; }
+    .btn-icon     {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text2);
+      cursor: pointer;
+      padding: 5px 8px;
+      font-size: 13px;
+      transition: all .15s;
+      line-height: 1;
+    }
+    .btn-icon:hover { color: var(--text); border-color: var(--text2); background: var(--surface2); }
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+    /* ── TRANSACTION LIST ── */
+    .tx-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 12px;
+      border-radius: 8px;
+      margin-bottom: 5px;
+      background: var(--surface2);
+      transition: background .15s;
+    }
+    .tx-item:hover { background: var(--border); }
+    .tx-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .tx-info { flex: 1; min-width: 0; }
+    .tx-desc { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tx-meta { font-size: 11px; color: var(--text2); margin-top: 2px; }
+    .tx-amount { font-size: 14px; font-weight: 600; flex-shrink: 0; }
+    .tx-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+    /* ── PROGRESS ── */
+    .progress-bar { background: var(--border); border-radius: 999px; height: 10px; overflow: hidden; margin: 8px 0; }
+    .progress-fill { height: 100%; border-radius: 999px; transition: width .4s ease; }
+
+    /* ── META CARD ── */
+    .meta-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      transition: border-color .15s;
+    }
+    .meta-card:hover { border-color: var(--text2); }
+    .meta-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+
+    /* ── LAYOUT HELPERS ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .section-title  { font-size: 17px; font-weight: 600; }
+
+    /* ── CHART ── */
+    .chart-container { position: relative; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state { text-align: center; padding: 36px 20px; color: var(--text2); }
+    .empty-icon  { font-size: 38px; margin-bottom: 10px; }
+
+    /* ── INFO BOXES ── */
+    .box-green  { background: rgba(16,185,129,.08);  border: 1px solid rgba(16,185,129,.25);  color: #6ee7b7; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 12px; }
+    .box-yellow { background: rgba(245,158,11,.08);  border: 1px solid rgba(245,158,11,.25);  color: #fcd34d; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 12px; }
+    .box-red    { background: rgba(239,68,68,.08);   border: 1px solid rgba(239,68,68,.25);   color: #fca5a5; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 12px; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.65);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 92vh;
+      overflow-y: auto;
+    }
+    .modal-title { font-size: 17px; font-weight: 600; margin-bottom: 18px; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--green);
+      border-radius: 10px;
+      padding: 11px 18px;
+      font-size: 13px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.35);
+      z-index: 300;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all .3s cubic-bezier(.34,1.56,.64,1);
+      max-width: 300px;
+    }
+    .toast.show        { transform: translateY(0); opacity: 1; }
+    .toast.toast-red   { border-left-color: var(--red); }
+    .toast.toast-blue  { border-left-color: var(--blue); }
+    .toast.toast-green { border-left-color: var(--green); }
+
+    hr.divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      .two-col { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .nav-tab { padding: 12px 12px; font-size: 12px; }
+      .header-title { font-size: 17px; }
+      .stat-value { font-size: 18px; }
+    }
+    @media (max-width: 380px) {
+      .stats-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Control de Gastos</h1>
 
-    <!-- FORMULARIO: Agregar gasto -->
-    <div class="card">
-      <h3>Agregar movimiento</h3>
-      <input type="text" id="descripcion" placeholder="Descripción">
-      <input type="number" id="monto" placeholder="Monto">
-      <input type="date" id="fecha">
+<!-- HEADER -->
+<header class="header">
+  <div class="header-title">💰 Ahorrapp</div>
+  <div class="saved-badge" id="lastSaved">● Listo</div>
+</header>
 
-      <select id="tipo">
-        <option value="ingreso">Ingreso</option>
-        <option value="gasto">Egreso</option>
-      </select>
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-tab active" data-tab="dashboard"     onclick="switchTab('dashboard')">📊 Dashboard</div>
+  <div class="nav-tab"        data-tab="transactions"  onclick="switchTab('transactions')">💳 Transacciones</div>
+  <div class="nav-tab"        data-tab="reports"       onclick="switchTab('reports')">📈 Reportes</div>
+  <div class="nav-tab"        data-tab="savings"       onclick="switchTab('savings')">🎯 Ahorro</div>
+  <div class="nav-tab"        data-tab="settings"      onclick="switchTab('settings')">⚙️ Config</div>
+</nav>
 
-      <select id="categoria">
-        <option value="comida">Comida</option>
-        <option value="transporte">Transporte</option>
-        <option value="servicios">Servicios</option>
-        <option value="educacion">Educación</option>
-        <option value="salud">Salud</option>
-        <option value="deportes">Deportes</option>
-        <option value="ocio">Ocio</option>
-        <option value="otros">Otros</option>
-      </select>
+<!-- MAIN -->
+<main class="main">
 
-      <button id="btnAgregar" onclick="agregarGasto()">Agregar</button>
-      <button id="btnCancelarEdicion" onclick="cancelarEdicion()" style="display:none; background:#ef4444;">✖ Cancelar edición</button>
-    </div>
+  <!-- ═══════════════════════════════ DASHBOARD ═══════════════════════════════ -->
+  <section class="tab-section" id="tab-dashboard">
 
-    <!-- LÍMITE DE OCIO -->
-    <div class="card">
-      <h3>Límite de ocio mensual</h3>
-      <input type="number" id="limiteOcio" placeholder="Límite ocio mensual">
-      <button onclick="guardarLimite()">Guardar límite</button>
-      <p>Límite actual: $<span id="mostrarLimite">0</span></p>
-    </div>
-
-    <!-- RESUMEN MENSUAL -->
-    <div class="card">
-      <h3>📅 Resumen mensual</h3>
-      <input type="month" id="filtroMes">
-      <button onclick="mostrarResumenMensual()">Ver resumen</button>
-      <div id="resumenMensual" style="display:none; margin-top:10px;"></div>
-    </div>
-
-    <!-- TOTAL -->
-    <div class="card">
-      <h2>Total: <span id="total">$0</span></h2>
-    </div>
-
-    <!-- FILTROS -->
-    <div class="card">
-      <h3>Filtrar movimientos</h3>
-      <label>Por fecha:</label>
-      <input type="date" id="filtroFecha" onchange="filtrarPorFecha()">
-      <label>Por categoría:</label>
-      <select id="filtroCategoria" onchange="filtrarPorCategoria()">
-        <option value="">Todas las categorías</option>
-        <option value="comida">Comida</option>
-        <option value="transporte">Transporte</option>
-        <option value="servicios">Servicios</option>
-        <option value="educacion">Educación</option>
-        <option value="salud">Salud</option>
-        <option value="deportes">Deportes</option>
-        <option value="ocio">Ocio</option>
-        <option value="otros">Otros</option>
-      </select>
-      <button onclick="limpiarFiltros()">🧹 Limpiar filtros</button>
-    </div>
-
-    <!-- META DE AHORRO -->
-    <div class="card">
-      <h3>🎯 Meta de ahorro</h3>
-      <input type="text"   id="metaNombre"        placeholder="Nombre de la meta (ej: Viaje, PC)">
-      <input type="number" id="metaTotal"          placeholder="Monto total a ahorrar">
-      <input type="number" id="metaCuotaSemanal"   placeholder="Cuota semanal (opcional)">
-      <input type="number" id="metaCuotaMensual"   placeholder="Cuota mensual (opcional)">
-      <button onclick="guardarMeta()">💾 Guardar meta</button>
-      <button onclick="verificarAlertaMeta()">🔔 Verificar alertas</button>
-
-      <!-- Panel de progreso -->
-      <div id="metaPanel" style="display:none; margin-top:12px;"></div>
-
-      <!-- Abonar -->
-      <div style="margin-top:12px;">
-        <input type="number" id="abonoMeta" placeholder="Monto a abonar">
-        <button onclick="abonarMeta()">➕ Abonar</button>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Balance total</div>
+        <div class="stat-value" id="statBalance">$0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Ingresos este mes</div>
+        <div class="stat-value" style="color:var(--green)" id="statIngresosMes">$0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Gastos este mes</div>
+        <div class="stat-value" style="color:var(--red)" id="statEgresosMes">$0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Balance este mes</div>
+        <div class="stat-value" id="statBalanceMes">$0</div>
       </div>
     </div>
 
-    <!-- GRÁFICAS -->
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Ingresos vs Gastos</div>
+        <div class="chart-container" style="max-height:230px">
+          <canvas id="chartDonut"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Últimos movimientos</div>
+        <div id="recentList"></div>
+      </div>
+    </div>
+
+    <div style="text-align:center">
+      <button class="btn btn-primary" onclick="switchTab('transactions')">+ Agregar movimiento</button>
+    </div>
+
+  </section>
+
+  <!-- ═══════════════════════════════ TRANSACCIONES ═══════════════════════════════ -->
+  <section class="tab-section" id="tab-transactions">
+
+    <!-- FORM -->
     <div class="card">
-      <h3>Ingresos vs Gastos</h3>
-      <canvas id="grafica" width="400" height="200"></canvas>
+      <div class="card-title" id="formTitle">Agregar movimiento</div>
+      <div class="form-grid">
+        <div class="form-group" style="grid-column: span 2">
+          <label class="form-label">Descripción</label>
+          <input type="text" id="txDescripcion" placeholder="Ej: Supermercado, Sueldo...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Monto</label>
+          <input type="number" id="txMonto" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha</label>
+          <input type="date" id="txFecha">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select id="txTipo">
+            <option value="">Seleccionar...</option>
+            <option value="ingreso">Ingreso</option>
+            <option value="gasto">Egreso</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Categoría</label>
+          <select id="txCategoria">
+            <option value="">Seleccionar...</option>
+            <option value="comida">Comida</option>
+            <option value="transporte">Transporte</option>
+            <option value="servicios">Servicios</option>
+            <option value="educacion">Educación</option>
+            <option value="salud">Salud</option>
+            <option value="deportes">Deportes</option>
+            <option value="ocio">Ocio</option>
+            <option value="sueldo">Sueldo</option>
+            <option value="otros">Otros</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnGuardar" onclick="agregarGasto()">Agregar</button>
+        <button class="btn btn-danger btn-sm" id="btnCancelarEdicion" onclick="cancelarEdicion()" style="display:none">✕ Cancelar</button>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="card">
+      <div class="card-title">Filtrar</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Fecha</label>
+          <input type="date" id="filtroFecha" onchange="aplicarFiltrosTx()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Categoría</label>
+          <select id="filtroCategoria" onchange="aplicarFiltrosTx()">
+            <option value="">Todas</option>
+            <option value="comida">Comida</option>
+            <option value="transporte">Transporte</option>
+            <option value="servicios">Servicios</option>
+            <option value="educacion">Educación</option>
+            <option value="salud">Salud</option>
+            <option value="deportes">Deportes</option>
+            <option value="ocio">Ocio</option>
+            <option value="sueldo">Sueldo</option>
+            <option value="otros">Otros</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select id="filtroTipo" onchange="aplicarFiltrosTx()">
+            <option value="">Todos</option>
+            <option value="ingreso">Ingresos</option>
+            <option value="gasto">Egresos</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="limpiarFiltrosTx()">🧹 Limpiar filtros</button>
+    </div>
+
+    <!-- LIST -->
+    <div class="card">
+      <div class="section-header">
+        <div class="card-title" style="margin-bottom:0">Movimientos</div>
+        <span id="txCount" style="font-size:12px;color:var(--text2)"></span>
+      </div>
+      <div id="txLista"></div>
+    </div>
+
+  </section>
+
+  <!-- ═══════════════════════════════ REPORTES ═══════════════════════════════ -->
+  <section class="tab-section" id="tab-reports">
+
+    <div class="card">
+      <div class="section-header">
+        <div class="card-title" style="margin-bottom:0">Resumen mensual</div>
+        <div class="btn-row">
+          <input type="month" id="reportMes" onchange="renderResumenMes(this.value)" style="width:auto">
+          <button class="btn btn-success btn-sm" onclick="exportarCSV()">⬇ CSV</button>
+        </div>
+      </div>
+      <div id="resumenMensualContent"></div>
     </div>
 
     <div class="card">
-      <h3>Gastos por categoría</h3>
-      <canvas id="graficaCategorias" width="400" height="200"></canvas>
+      <div class="card-title">Tendencia — últimos 6 meses</div>
+      <div class="chart-container">
+        <canvas id="chartTrend"></canvas>
+      </div>
     </div>
 
-    <!-- LISTA DE MOVIMIENTOS -->
     <div class="card">
-      <h3>Movimientos</h3>
-      <ul id="lista"></ul>
+      <div class="card-title">Distribución de gastos por categoría</div>
+      <div class="chart-container">
+        <canvas id="chartBars"></canvas>
+      </div>
     </div>
 
+  </section>
+
+  <!-- ═══════════════════════════════ AHORRO ═══════════════════════════════ -->
+  <section class="tab-section" id="tab-savings">
+
+    <div class="section-header">
+      <div class="section-title">Metas de ahorro</div>
+      <button class="btn btn-primary" onclick="abrirModalMeta()">+ Nueva meta</button>
+    </div>
+
+    <div id="metasList"></div>
+
+  </section>
+
+  <!-- ═══════════════════════════════ CONFIG ═══════════════════════════════ -->
+  <section class="tab-section" id="tab-settings">
+
+    <div class="card">
+      <div class="card-title">Límite de ocio mensual</div>
+      <p style="color:var(--text2);font-size:13px;margin-bottom:14px">
+        Recibirás una alerta cuando tus gastos de ocio superen este monto en el mes.
+      </p>
+      <div class="form-group" style="max-width:280px;margin-bottom:12px">
+        <label class="form-label">Monto límite</label>
+        <input type="number" id="inputLimiteOcio" placeholder="Ej: 100000">
+      </div>
+      <p style="color:var(--text2);font-size:12px;margin-bottom:14px">
+        Límite actual: <strong id="lblLimiteActual" style="color:var(--text)">—</strong>
+      </p>
+      <button class="btn btn-primary" onclick="guardarLimiteOcio()">Guardar límite</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Respaldo de datos</div>
+      <p style="color:var(--text2);font-size:13px;margin-bottom:16px">
+        Exporta todos tus datos como archivo JSON para hacer backup, o importa uno previo.
+        También puedes exportar en CSV para abrir en Excel o Google Sheets.
+      </p>
+      <div class="btn-row">
+        <button class="btn btn-primary"  onclick="exportarJSON()">⬇ Backup JSON</button>
+        <button class="btn btn-ghost"    onclick="importarJSON()">⬆ Importar JSON</button>
+        <button class="btn btn-success btn-sm" onclick="exportarCSV()">⬇ Exportar CSV</button>
+      </div>
+      <input type="file" id="inputImportJSON" accept=".json" onchange="procesarImportJSON(event)" style="display:none">
+    </div>
+
+    <div class="card" style="border-color:rgba(239,68,68,.3)">
+      <div class="card-title" style="color:var(--red)">Zona de peligro</div>
+      <p style="color:var(--text2);font-size:13px;margin-bottom:16px">
+        Eliminar todos los datos de forma permanente e irreversible.
+        <strong>Asegúrate de hacer un backup antes.</strong>
+      </p>
+      <button class="btn btn-danger" onclick="limpiarTodos()">🗑 Eliminar todos los datos</button>
+    </div>
+
+  </section>
+
+</main>
+
+<!-- ═══ MODAL: Nueva / Editar meta ═══ -->
+<div class="modal-overlay" id="modalMeta">
+  <div class="modal">
+    <div class="modal-title" id="modalMetaTitle">Nueva meta de ahorro</div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label class="form-label">Nombre</label>
+      <input type="text" id="metaNombre" placeholder="Ej: Viaje, PC nueva, Fondo emergencia">
+    </div>
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">Monto objetivo</label>
+        <input type="number" id="metaTotal" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Color</label>
+        <input type="color" id="metaColor" value="#3b82f6">
+      </div>
+    </div>
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">Cuota semanal (opcional)</label>
+        <input type="number" id="metaCuotaSemanal" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cuota mensual (opcional)</label>
+        <input type="number" id="metaCuotaMensual" placeholder="0">
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:18px">
+      <label class="form-label">Fecha objetivo (opcional)</label>
+      <input type="date" id="metaFechaObjetivo">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="guardarModalMeta()">Guardar</button>
+      <button class="btn btn-ghost"   onclick="cerrarModalMeta()">Cancelar</button>
+    </div>
   </div>
+</div>
 
-  <!-- Chart.js PRIMERO, luego app.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="app.js"></script>
+<!-- ═══ MODAL: Abonar a meta ═══ -->
+<div class="modal-overlay" id="modalAbonar">
+  <div class="modal">
+    <div class="modal-title">Abonar a: <span id="abonarMetaNombre" style="color:var(--blue)"></span></div>
+    <div id="abonarMetaInfo" style="margin-bottom:14px;font-size:13px;color:var(--text2)"></div>
+    <div class="form-group" style="margin-bottom:18px">
+      <label class="form-label">Monto a abonar</label>
+      <input type="number" id="abonarMonto" placeholder="0">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-success" onclick="confirmarAbono()">✓ Abonar</button>
+      <button class="btn btn-ghost"   onclick="cerrarAbonar()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
