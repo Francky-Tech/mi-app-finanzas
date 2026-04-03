@@ -382,8 +382,122 @@
 <div class="toast" id="toast"></div>
 
 <!-- Firebase -->
-<script type="module" src="firebase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Firebase SDK + Data Layer — inline para garantizar scope global -->
+<script type="module">
+import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+         signInWithPopup, GoogleAuthProvider, onAuthStateChanged,
+         signOut, updateProfile } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, setDoc, getDoc, collection,
+         addDoc, getDocs, onSnapshot, query, orderBy,
+         limit, serverTimestamp, deleteDoc, updateDoc }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyDYxhSPuMRSMcray0HBYfnvDk6hgStuLtk",
+  authDomain:        "ahorrapp-pro.firebaseapp.com",
+  projectId:         "ahorrapp-pro",
+  storageBucket:     "ahorrapp-pro.firebasestorage.app",
+  messagingSenderId: "484687357317",
+  appId:             "1:484687357317:web:114189a184d6f3131710ec"
+};
+
+const DEMO_MODE = false;
+window._DEMO_MODE = DEMO_MODE;
+
+let auth, db;
+const app = initializeApp(FIREBASE_CONFIG);
+auth = getAuth(app);
+db   = getFirestore(app);
+
+// ── DATA LAYER ──
+function key(uid, k) { return `ap_${uid}_${k}`; }
+
+window._db = {
+  async saveProfile(uid, data) {
+    try { await setDoc(doc(db,'users',uid,'data','profile'), data); } catch(e) { console.error('saveProfile',e); }
+  },
+  async getProfile(uid) {
+    try { const s=await getDoc(doc(db,'users',uid,'data','profile')); return s.exists()?s.data():null; } catch(e) { return null; }
+  },
+  async saveGastos(uid, list) {
+    try { await setDoc(doc(db,'users',uid,'data','gastos'), { list }); } catch(e) { console.error('saveGastos',e); }
+  },
+  async getGastos(uid) {
+    try { const s=await getDoc(doc(db,'users',uid,'data','gastos')); return s.exists()?(s.data().list||[]):[] ; } catch(e) { return []; }
+  },
+  async saveMetas(uid, list) {
+    try { await setDoc(doc(db,'users',uid,'data','metas'), { list }); } catch(e) { console.error('saveMetas',e); }
+  },
+  async getMetas(uid) {
+    try { const s=await getDoc(doc(db,'users',uid,'data','metas')); return s.exists()?(s.data().list||[]):[] ; } catch(e) { return []; }
+  },
+  async saveConfig(uid, data) {
+    try { await setDoc(doc(db,'users',uid,'data','config'), data); } catch(e) { console.error('saveConfig',e); }
+  },
+  async getConfig(uid) {
+    try { const s=await getDoc(doc(db,'users',uid,'data','config')); return s.exists()?s.data():null; } catch(e) { return null; }
+  },
+};
+
+// ── SPACES DATA LAYER ──
+window._dbSpaces = { db, collection, addDoc, getDocs, onSnapshot, query, orderBy,
+  limit, serverTimestamp, deleteDoc, updateDoc, setDoc, getDoc, doc };
+
+// ── AUTH ──
+window.doLogin = async () => {
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  const err=document.getElementById('loginErr');
+  err.style.display='none';
+  if(!email||!pass){err.textContent='Completa todos los campos';err.style.display='block';return;}
+  try {
+    const c=await signInWithEmailAndPassword(auth,email,pass);
+    window._onUserReady({uid:c.user.uid,email:c.user.email,displayName:c.user.displayName});
+  } catch(e) { err.textContent='Email o contraseña incorrectos'; err.style.display='block'; }
+};
+
+window.doRegister = async () => {
+  const nombre=document.getElementById('regNombre').value.trim();
+  const email=document.getElementById('regEmail').value.trim();
+  const pass=document.getElementById('regPass').value;
+  const err=document.getElementById('regErr');
+  err.style.display='none';
+  if(!nombre||!email||!pass){err.textContent='Completa todos los campos';err.style.display='block';return;}
+  if(pass.length<6){err.textContent='Contraseña mínimo 6 caracteres';err.style.display='block';return;}
+  try {
+    const c=await createUserWithEmailAndPassword(auth,email,pass);
+    await updateProfile(c.user,{displayName:nombre});
+    window._onUserReady({uid:c.user.uid,email,displayName:nombre,isNew:true});
+  } catch(e) {
+    err.textContent=e.code==='auth/email-already-in-use'?'Email ya registrado':'Error: '+e.message;
+    err.style.display='block';
+  }
+};
+
+window.doGoogleLogin = async () => {
+  try {
+    const c=await signInWithPopup(auth,new GoogleAuthProvider());
+    window._onUserReady({uid:c.user.uid,email:c.user.email,displayName:c.user.displayName,isNew:false});
+  } catch(e) { console.warn('Google login:',e); }
+};
+
+window.doLogout = async () => {
+  if(!confirm('¿Cerrar sesión?'))return;
+  await signOut(auth);
+  location.reload();
+};
+
+// ── AUTH STATE — detecta si ya estaba logueado ──
+onAuthStateChanged(auth, user => {
+  if (user && !window.CURRENT_USER) {
+    window._onUserReady({uid:user.uid,email:user.email,displayName:user.displayName});
+  }
+});
+</script>
+
 <script src="app.js"></script>
 <script type="module" src="spaces.js"></script>
 <script type="module" src="spaces-ui.js"></script>

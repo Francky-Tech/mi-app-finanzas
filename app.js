@@ -740,7 +740,7 @@ function renderTransactions() {
   const f = document.getElementById('txFecha'); if(f&&!f.value) f.value=todayStr();
   applyFilters();
 }
-function addTx() {
+async function addTx() {
   const desc = document.getElementById('txDesc')?.value.trim();
   const monto= +document.getElementById('txMonto')?.value;
   const tipo = document.getElementById('txTipo')?.value;
@@ -748,9 +748,17 @@ function addTx() {
   const fecha= document.getElementById('txFecha')?.value;
   if(!desc||!monto||monto<=0||!tipo||!cat||!fecha){ showToast('Completa todos los campos','red'); return; }
   const entry = { id: Date.now(), descripcion:desc, monto, tipo, categoria:cat, fecha };
-  if(indexEditando!==null){ gastos[indexEditando]=entry; indexEditando=null; resetTxForm(); showToast('Actualizado ✓','blue'); }
-  else { gastos.push(entry); showToast('Agregado ✓','green'); }
-  saveData(); applyFilters();
+  if(indexEditando!==null){ gastos[indexEditando]=entry; indexEditando=null; resetTxForm(); }
+  else { gastos.push(entry); }
+  try {
+    await saveData();
+    showToast(indexEditando!==null?'Actualizado ✓':'Agregado ✓', indexEditando!==null?'blue':'green');
+  } catch(e) {
+    console.error('Error guardando:', e);
+    showToast('Error al guardar. Revisa la consola.','red');
+    return;
+  }
+  applyFilters();
 }
 function editTx(i){ const g=gastos[i]; setVal('txDesc',g.descripcion); setVal('txMonto',g.monto); setVal('txTipo',g.tipo); setVal('txCat',g.categoria); setVal('txFecha',g.fecha); indexEditando=i; document.getElementById('btnGuardar').textContent='💾 Guardar'; document.getElementById('btnCancelarEdit').style.display='inline-flex'; document.getElementById('formTitle').textContent='Editar movimiento'; document.getElementById('txDesc')?.focus(); }
 function deleteTx(i){ if(!confirm('¿Eliminar?'))return; gastos.splice(i,1); saveData(); applyFilters(); showToast('Eliminado','red'); }
