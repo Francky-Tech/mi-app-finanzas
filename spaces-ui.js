@@ -277,14 +277,13 @@ window.aiTeamAnalysis = async function(prompt) {
     const byMember = {};
     (window.gastos||[]).forEach(g=>{ const k=g.authorName||'?'; byMember[k]=(byMember[k]||0)+g.monto; });
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const data = await fetch('/api/ai', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514', max_tokens: 600,
+        max_tokens: 600,
         messages:[{ role:'user', content:`Eres asesor financiero de un equipo/pareja en Colombia. Analiza estos datos y responde: "${prompt}"\n\nDATA:\nEspacio: ${SPACE.current?.name}\nMiembros: ${members}\nIngresos totales: ${fmt(ing)}\nEgresos totales: ${fmt(eg)}\nBalance: ${fmt(ing-eg)}\nGastos por categoría: ${JSON.stringify(cats)}\nAportes por miembro: ${JSON.stringify(byMember)}\n\nResponde en español, máximo 200 palabras, con emojis y recomendaciones concretas.` }]
       })
-    });
-    const data = await resp.json();
+    }).then(r=>{ if(!r.ok) throw new Error('Error '+r.status); return r.json(); });
     const text = data.content?.[0]?.text || 'No se pudo obtener el análisis.';
     el.innerHTML = `<div style="background:rgba(79,142,255,.07);border:1px solid rgba(79,142,255,.15);border-radius:10px;padding:14px;font-size:13px;line-height:1.65;color:var(--text)">${text.replace(/\n/g,'<br>')}</div>`;
   } catch(e) {

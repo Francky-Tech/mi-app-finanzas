@@ -212,14 +212,9 @@ Ahorros/Cesantías/Meta: ${obData.ahorro}
 Objetivo/Fecha/Disciplina: ${obData.objetivo}
 Nombre del usuario: ${CURRENT_USER.displayName || 'Usuario'}`;
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role:'user', content: systemPrompt + '\n\n' + userMsg }],
-      })
+    const resp = await callAI({
+      messages: [{ role:'user', content: systemPrompt + '\n\n' + userMsg }],
+      max_tokens: 1000,
     });
 
     const data = await resp.json();
@@ -882,16 +877,15 @@ async function sendAI(){
   chatHistory.push({role:'user',content:msg});
   showAITyping();
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',max_tokens:1000,
+    const data = await callAI({
       system:`Eres un asesor financiero personal experto en Colombia. Tienes acceso a los datos completos del usuario. Da consejos concretos con números exactos. Responde en español. Usa emojis para destacar puntos clave. Máximo 300 palabras. Si ves algo preocupante, dilo directamente.\n\nDATA FINANCIERA:\n${buildContexto()}`,
       messages:chatHistory.slice(-8),
-    })});
-    const data=await resp.json();
+      max_tokens:1000,
+    });
     hideAITyping();
     if(data.content?.[0]?.text){const r=data.content[0].text;chatHistory.push({role:'assistant',content:r});addAIMsg('assistant',r);}
-    else addAIMsg('assistant','⚠️ Error de conexión con la IA.');
-  }catch(e){hideAITyping();addAIMsg('assistant','⚠️ Error al conectar. Intenta de nuevo.');}
+    else addAIMsg('assistant','⚠️ Respuesta inesperada de la IA.');
+  }catch(e){hideAITyping();addAIMsg('assistant','⚠️ '+e.message);}
 }
 
 function addAIMsg(role,text){
@@ -954,6 +948,22 @@ async function clearAll(){
   gastos=[];metas=[];
   await saveData();
   switchTab('dashboard');showToast('Datos eliminados','red');
+}
+
+// ============================================================
+// AI PROXY HELPER — usa /api/ai de Vercel (nunca directo a Anthropic)
+// ============================================================
+async function callAI({ system, messages, max_tokens = 1000 }) {
+  const resp = await fetch('/api/ai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ system, messages, max_tokens }),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error || `Error ${resp.status} del servidor`);
+  }
+  return resp.json();
 }
 
 // ============================================================
