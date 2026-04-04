@@ -6,7 +6,7 @@
 let CURRENT_USER = null;
 let gastos = [], metas = [];
 let PERFIL = defaultPerfil();
-let APP_CONFIG = { tabs: [], limiteOcio: 500000 };
+let APP_CONFIG = { tabs: [], limiteOcio: 500000, aiProvider: 'claude' };
 let chatHistory = [];
 let obHistory   = [];
 let obStep = 0;
@@ -212,12 +212,11 @@ Ahorros/Cesantías/Meta: ${obData.ahorro}
 Objetivo/Fecha/Disciplina: ${obData.objetivo}
 Nombre del usuario: ${CURRENT_USER.displayName || 'Usuario'}`;
 
-    const resp = await callAI({
+    const data = await callAI({
       messages: [{ role:'user', content: systemPrompt + '\n\n' + userMsg }],
       max_tokens: 1000,
     });
 
-    const data = await resp.json();
     hideObTyping();
 
     if (data.content?.[0]?.text) {
@@ -491,8 +490,16 @@ function getTabHTML(tab) {
         </div>
         <div id="cfgGastosFijos"></div>
       </div>
-      <div class="card"><div class="card-title">Personalizar app con IA</div>
-        <p style="color:var(--text2);font-size:13px;margin-bottom:14px">La IA puede reorganizar tus tabs y módulos según tu situación actual.</p>
+      <div class="card"><div class="card-title">🤖 Motor de Inteligencia Artificial</div>
+        <p style="color:var(--text2);font-size:13px;margin-bottom:14px">Elige qué IA responde en el asesor y el onboarding.</p>
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label">Proveedor de IA activo</label>
+          <select id="cfgAiProvider" onchange="saveConfig()" style="width:100%;padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:14px;cursor:pointer">
+            <option value="claude">🟣 Claude (Anthropic) — Sonnet 4</option>
+            <option value="openai">🟢 ChatGPT (OpenAI) — GPT-4o</option>
+          </select>
+        </div>
+        <div id="aiProviderBadge" style="font-size:12px;color:var(--text2);margin-bottom:16px"></div>
         <button class="btn btn-ai" onclick="rerunOnboarding()">🤖 Re-configurar app</button>
       </div>
       <div class="card"><div class="card-title">Datos</div>
@@ -823,6 +830,14 @@ function confirmarAbono(){ const mon=+document.getElementById('abonarMonto')?.va
 function renderSettings(){
   setVal('cfgIngreso', PERFIL.ingresoMensual||0);
   setVal('cfgOcio', APP_CONFIG.limiteOcio||500000);
+  setVal('cfgAiProvider', APP_CONFIG.aiProvider||'claude');
+  const badge = document.getElementById('aiProviderBadge');
+  if(badge){
+    const p = APP_CONFIG.aiProvider||'claude';
+    badge.innerHTML = p==='claude'
+      ? '✅ Usando <strong>Claude Sonnet 4</strong> (Anthropic) — excelente para finanzas en español'
+      : '✅ Usando <strong>GPT-4o</strong> (OpenAI) — modelo más reciente de ChatGPT';
+  }
   const gf=document.getElementById('cfgGastosFijos');
   if(gf&&Object.keys(PERFIL.gastosFijos||{}).length){
     gf.innerHTML='<hr class="div"><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:10px">Gastos fijos configurados</div>'+
@@ -833,6 +848,10 @@ function renderSettings(){
 async function saveConfig(){
   const ing=+getVal('cfgIngreso'); if(ing>0)PERFIL.ingresoMensual=ing;
   const oc=+getVal('cfgOcio'); if(oc>0)APP_CONFIG.limiteOcio=oc;
+  const prov=getVal('cfgAiProvider'); if(prov)APP_CONFIG.aiProvider=prov;
+  // Actualizar badge dinámicamente
+  const badge=document.getElementById('aiProviderBadge');
+  if(badge&&prov){badge.innerHTML=prov==='claude'?'✅ Usando <strong>Claude Sonnet 4</strong> (Anthropic) — excelente para finanzas en español':'✅ Usando <strong>GPT-4o</strong> (OpenAI) — modelo más reciente de ChatGPT';}
   await window._db.saveConfig(CURRENT_USER.uid, APP_CONFIG);
   await window._db.saveProfile(CURRENT_USER.uid, PERFIL);
   showToast('Configuración guardada ✓','green');
@@ -951,13 +970,15 @@ async function clearAll(){
 }
 
 // ============================================================
-// AI PROXY HELPER — usa /api/ai de Vercel (nunca directo a Anthropic)
+// AI PROXY HELPER — usa Cloudflare Worker como proxy seguro
+// ⚠️ Reemplaza WORKER_URL con la URL de tu worker desplegado
 // ============================================================
 async function callAI({ system, messages, max_tokens = 1000 }) {
+  const provider = APP_CONFIG.aiProvider || 'claude';
   const resp = await fetch('/api/ai', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ system, messages, max_tokens }),
+    body: JSON.stringify({ system, messages, max_tokens, provider }),
   });
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
