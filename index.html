@@ -951,9 +951,18 @@ window.doLogout = async () => {
   location.reload();
 };
 
-onAuthStateChanged(auth, user => {
+onAuthStateChanged(auth, async user => {
   if (user && !window.CURRENT_USER) {
-    window._onUserReady({uid:user.uid,email:user.email,displayName:user.displayName});
+    // Esperar a que app.js cargue y defina _onUserReady
+    let retries = 20;
+    while (typeof window._onUserReady !== 'function' && retries-- > 0) {
+      await new Promise(r => setTimeout(r, 150));
+    }
+    if (typeof window._onUserReady === 'function') {
+      window._onUserReady({uid:user.uid,email:user.email,displayName:user.displayName});
+    } else {
+      console.error('app.js no cargó a tiempo — recarga la página');
+    }
   }
 });
 </script>
