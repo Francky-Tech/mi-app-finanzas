@@ -5,743 +5,722 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ahorrapp Pro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+    /* ═══ PALETA PRINCIPAL ═══ */
     :root{
-      --bg:#08090f;--s1:#0d0f1e;--s2:#131626;--s3:#191d32;
-      --border:#1e2440;--border2:#283060;
-      --text:#eef0ff;--text2:#8892c4;--text3:#4a5480;
-      --blue:#4f8eff;--blue2:#2563eb;--blue-glow:rgba(79,142,255,.15);
-      --green:#00e5a0;--green-dim:rgba(0,229,160,.1);
-      --red:#ff4f6d;--red-dim:rgba(255,79,109,.1);
-      --yellow:#ffcc44;--yellow-dim:rgba(255,204,68,.1);
-      --purple:#9d6eff;--cyan:#22e5f5;
-      --radius:16px;--rsm:10px;
+      /* Fondos */
+      --bg:#080c0a;
+      --s1:#0d1410;
+      --s2:#111a13;
+      --s3:#162019;
+
+      /* Bordes */
+      --border:#1e2e22;
+      --border2:#2a4030;
+
+      /* Texto */
+      --text:#f0f7f2;
+      --text2:#7a9e86;
+      --text3:#3d5c47;
+
+      /* Acento principal: verde */
+      --green:#22c55e;
+      --green2:#16a34a;
+      --green-dim:rgba(34,197,94,.1);
+      --green-glow:rgba(34,197,94,.15);
+
+      /* Colores de estado */
+      --red:#ef4444;
+      --red-dim:rgba(239,68,68,.1);
+      --yellow:#f59e0b;
+      --yellow-dim:rgba(245,158,11,.1);
+      --blue:#38bdf8;
+      --blue-dim:rgba(56,189,248,.1);
+      --purple:#a78bfa;
+
+      --radius:14px;
+      --rsm:9px;
     }
+
     html{scroll-behavior:smooth}
     body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;overflow-x:hidden}
     ::-webkit-scrollbar{width:4px;height:4px}
     ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
 
-    /* ═══ AUTH ═══ */
+    /* ═══════════════════════════════════════
+       LANDING
+    ═══════════════════════════════════════ */
+    #landingPage{display:block}
+    #landingPage.hide{display:none}
+
+    /* Navbar landing */
+    .l-nav{
+      position:fixed;top:0;left:0;right:0;z-index:200;
+      padding:18px 48px;
+      display:flex;align-items:center;justify-content:space-between;
+      border-bottom:1px solid rgba(34,197,94,.08);
+      backdrop-filter:blur(16px);
+      background:rgba(8,12,10,.75);
+    }
+    .l-logo{
+      font-family:'Syne',sans-serif;font-weight:800;font-size:18px;
+      color:var(--text);letter-spacing:-.3px;
+    }
+    .l-logo em{color:var(--green);font-style:normal}
+    .l-nav-links{display:flex;align-items:center;gap:32px}
+    .l-nav-link{font-size:13px;color:var(--text2);text-decoration:none;transition:color .2s;cursor:pointer;background:none;border:none}
+    .l-nav-link:hover{color:var(--text)}
+    .l-nav-cta{
+      font-family:'Syne',sans-serif;font-weight:700;font-size:13px;
+      padding:10px 24px;background:var(--green);color:#051209;
+      border:none;border-radius:8px;cursor:pointer;
+      transition:all .2s;letter-spacing:.2px;
+    }
+    .l-nav-cta:hover{background:#4ade80;transform:translateY(-1px);box-shadow:0 8px 24px rgba(34,197,94,.3)}
+
+    /* Hero */
+    #l-hero{
+      position:relative;min-height:100vh;
+      display:flex;align-items:center;
+      padding:100px 48px 60px;
+      overflow:hidden;
+    }
+    .l-hero-bg{
+      position:absolute;inset:0;
+      background:radial-gradient(ellipse 80% 60% at 60% 40%,rgba(20,83,45,.35) 0%,transparent 70%),
+                 radial-gradient(ellipse 40% 40% at 80% 20%,rgba(34,197,94,.08) 0%,transparent 60%);
+    }
+    .l-grid{
+      position:absolute;inset:0;
+      background-image:linear-gradient(rgba(34,197,94,.025) 1px,transparent 1px),
+                       linear-gradient(90deg,rgba(34,197,94,.025) 1px,transparent 1px);
+      background-size:64px 64px;
+    }
+    #l-orb-canvas{position:absolute;top:0;right:0;width:55%;height:100%;z-index:2}
+
+    .l-hero-content{position:relative;z-index:10;max-width:580px}
+    .l-tag{
+      display:inline-flex;align-items:center;gap:8px;
+      font-size:11px;letter-spacing:2px;text-transform:uppercase;
+      color:var(--green);background:var(--green-dim);
+      border:1px solid rgba(34,197,94,.2);border-radius:99px;
+      padding:5px 14px;margin-bottom:28px;
+      opacity:0;animation:lfu .7s .1s forwards;
+    }
+    .l-tag-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:lpulse 2s infinite}
+    @keyframes lpulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+    .l-h1{
+      font-family:'Syne',sans-serif;font-weight:800;
+      font-size:clamp(40px,5.5vw,76px);line-height:1.02;
+      letter-spacing:-2.5px;margin-bottom:24px;
+      opacity:0;animation:lfu .7s .25s forwards;
+    }
+    .l-h1 .l-accent{color:var(--green)}
+    .l-h1 .l-muted{color:var(--text2)}
+
+    .l-sub{
+      font-size:16px;line-height:1.75;color:var(--text2);
+      margin-bottom:40px;max-width:460px;
+      opacity:0;animation:lfu .7s .4s forwards;
+    }
+
+    .l-cta-row{display:flex;gap:14px;align-items:center;opacity:0;animation:lfu .7s .55s forwards}
+    .l-btn-primary{
+      font-family:'Syne',sans-serif;font-weight:700;font-size:15px;
+      padding:15px 36px;background:var(--green);color:#051209;
+      border:none;border-radius:10px;cursor:pointer;
+      transition:all .25s;text-decoration:none;display:inline-block;
+    }
+    .l-btn-primary:hover{background:#4ade80;transform:translateY(-2px);box-shadow:0 12px 32px rgba(34,197,94,.35)}
+    .l-btn-ghost{
+      font-size:13px;color:var(--text2);background:none;border:none;
+      cursor:pointer;display:flex;align-items:center;gap:6px;
+      transition:color .2s;text-decoration:none;
+    }
+    .l-btn-ghost:hover{color:var(--text)}
+
+    .l-stats{display:flex;gap:40px;margin-top:56px;opacity:0;animation:lfu .7s .7s forwards}
+    .l-stat-n{font-family:'Syne',sans-serif;font-weight:800;font-size:30px;color:var(--green)}
+    .l-stat-l{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-top:3px}
+
+    /* Floating card decoration */
+    .l-float-card{
+      position:absolute;right:8%;top:50%;transform:translateY(-50%);
+      z-index:12;
+      background:rgba(13,20,16,.85);backdrop-filter:blur(20px);
+      border:1px solid var(--border2);border-radius:16px;
+      padding:20px 24px;min-width:200px;
+      animation:lfloat 4s ease-in-out infinite;
+      box-shadow:0 24px 64px rgba(0,0,0,.4);
+    }
+    @keyframes lfloat{0%,100%{transform:translateY(-50%) translateY(-8px)}50%{transform:translateY(-50%) translateY(8px)}}
+    .l-fc-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);margin-bottom:8px}
+    .l-fc-value{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;color:var(--green)}
+    .l-fc-sub{font-size:11px;color:var(--text2);margin-top:4px;display:flex;align-items:center;gap:4px}
+    .l-fc-badge{background:rgba(34,197,94,.15);color:var(--green);font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px}
+
+    @keyframes lfu{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+    /* Slides */
+    #l-slides{padding:100px 0;background:var(--s1);border-top:1px solid var(--border)}
+    .l-section-header{text-align:center;margin-bottom:60px;padding:0 48px}
+    .l-section-tag{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--green);margin-bottom:14px}
+    .l-section-title{
+      font-family:'Syne',sans-serif;font-weight:800;
+      font-size:clamp(28px,3.5vw,48px);letter-spacing:-1.5px;
+    }
+
+    .l-slides-wrapper{overflow:hidden;position:relative}
+    .l-slides-track{display:flex;gap:20px;padding:0 48px;transition:transform .5s cubic-bezier(.4,0,.2,1)}
+
+    .l-slide{
+      flex:0 0 calc(75vw - 60px);max-width:780px;
+      background:var(--bg);border:1px solid var(--border);border-radius:20px;
+      padding:48px;transition:border-color .3s,box-shadow .3s;
+    }
+    .l-slide.active{border-color:rgba(34,197,94,.3);box-shadow:0 0 40px rgba(34,197,94,.06)}
+    .l-slide-num{font-size:11px;letter-spacing:2px;color:var(--text3);margin-bottom:28px;font-family:'DM Mono',monospace}
+    .l-slide-icon{font-size:40px;margin-bottom:20px;display:block}
+    .l-slide-title{
+      font-family:'Syne',sans-serif;font-weight:800;
+      font-size:28px;letter-spacing:-.8px;margin-bottom:16px;line-height:1.1;
+    }
+    .l-slide-title .hl{color:var(--green)}
+    .l-slide-desc{font-size:14px;line-height:1.85;color:var(--text2);max-width:480px}
+    .l-slide-pill{
+      display:inline-flex;align-items:center;gap:8px;margin-top:28px;
+      background:var(--green-dim);border:1px solid rgba(34,197,94,.2);
+      border-radius:99px;padding:8px 16px;font-size:12px;color:var(--green);
+    }
+
+    .l-controls{display:flex;align-items:center;justify-content:center;gap:20px;margin-top:44px;padding:0 48px}
+    .l-btn-slide{
+      width:44px;height:44px;border:1px solid var(--border2);background:var(--s1);
+      color:var(--text2);font-size:16px;border-radius:10px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;transition:all .2s;
+    }
+    .l-btn-slide:hover{border-color:var(--green);color:var(--green)}
+    .l-dots{display:flex;gap:6px;align-items:center}
+    .l-dot{width:6px;height:6px;background:var(--border2);border-radius:50%;cursor:pointer;transition:all .3s}
+    .l-dot.active{background:var(--green);width:20px;border-radius:3px}
+
+    /* CTA */
+    #l-cta{
+      padding:120px 48px;text-align:center;
+      background:linear-gradient(180deg,var(--s1) 0%,var(--bg) 100%);
+      border-top:1px solid var(--border);
+    }
+    .l-cta-title{
+      font-family:'Syne',sans-serif;font-weight:800;
+      font-size:clamp(32px,4.5vw,64px);letter-spacing:-2px;margin-bottom:20px;
+    }
+    .l-cta-title .hl{color:var(--green)}
+    .l-cta-sub{font-size:15px;color:var(--text2);margin-bottom:44px}
+    .l-cta-btn{
+      font-family:'Syne',sans-serif;font-weight:700;font-size:16px;
+      padding:18px 52px;background:var(--green);color:#051209;
+      border:none;border-radius:12px;cursor:pointer;transition:all .25s;
+    }
+    .l-cta-btn:hover{background:#4ade80;transform:translateY(-2px);box-shadow:0 16px 40px rgba(34,197,94,.35)}
+    .l-cta-note{margin-top:16px;font-size:12px;color:var(--text3)}
+
+    /* Footer landing */
+    .l-footer{background:var(--bg);border-top:1px solid var(--border);padding:48px}
+    .l-footer-top{display:flex;justify-content:space-between;align-items:flex-start;gap:40px;flex-wrap:wrap;margin-bottom:40px}
+    .l-footer-brand .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:17px;margin-bottom:8px}
+    .l-footer-brand .logo em{color:var(--green);font-style:normal}
+    .l-footer-brand p{font-size:12px;color:var(--text3);line-height:1.7;max-width:220px}
+    .l-footer-links{display:flex;gap:48px;flex-wrap:wrap}
+    .l-fc h4{font-family:'Syne',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:14px;font-weight:700}
+    .l-fc a{display:block;font-size:13px;color:var(--text3);text-decoration:none;margin-bottom:8px;cursor:pointer;transition:color .2s}
+    .l-fc a:hover{color:var(--text)}
+    .l-footer-bottom{border-top:1px solid var(--border);padding-top:28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+    .l-footer-copy{font-size:12px;color:var(--text3)}
+    .l-footer-legal{display:flex;gap:20px}
+    .l-footer-legal a{font-size:12px;color:var(--text3);text-decoration:none;cursor:pointer;transition:color .2s}
+    .l-footer-legal a:hover{color:var(--green)}
+
+    /* Modals landing */
+    .l-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .3s}
+    .l-modal-overlay.open{opacity:1;pointer-events:all}
+    .l-modal-box{background:var(--s1);border:1px solid var(--border2);border-radius:20px;max-width:680px;width:100%;max-height:80vh;overflow-y:auto;padding:44px;position:relative}
+    .l-modal-box::-webkit-scrollbar{width:3px}
+    .l-modal-box::-webkit-scrollbar-thumb{background:var(--green);border-radius:2px}
+    .l-modal-close{position:absolute;top:18px;right:18px;width:30px;height:30px;background:var(--s2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+    .l-modal-close:hover{border-color:var(--red);color:var(--red)}
+    .l-modal-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--green);margin-bottom:6px;letter-spacing:-.3px}
+    .l-modal-date{font-size:11px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:28px;font-family:'DM Mono',monospace}
+    .l-modal-content h3{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--green);margin:24px 0 10px;letter-spacing:1.5px;text-transform:uppercase}
+    .l-modal-content p{font-size:13px;color:var(--text2);line-height:1.85;margin-bottom:12px}
+    .l-modal-content ul{padding-left:18px;margin-bottom:12px}
+    .l-modal-content li{font-size:13px;color:var(--text2);line-height:1.85;margin-bottom:5px}
+
+    @media(max-width:768px){
+      .l-nav{padding:14px 20px}
+      .l-nav-links{display:none}
+      #l-hero{padding:90px 24px 48px}
+      #l-orb-canvas{width:100%;opacity:.2}
+      .l-float-card{display:none}
+      .l-slide{flex:0 0 calc(100vw - 48px);padding:28px}
+      .l-slides-track{padding:0 24px}
+      .l-controls{padding:0 24px}
+      #l-cta{padding:72px 24px}
+      .l-footer{padding:32px 20px}
+      .l-footer-top{flex-direction:column}
+    }
+
+    /* ═══════════════════════════════════════
+       AUTH
+    ═══════════════════════════════════════ */
     #authLayer{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;transition:opacity .4s,transform .4s}
-    #authLayer.hide{opacity:0;pointer-events:none;transform:scale(1.03)}
+    #authLayer.hide{opacity:0;pointer-events:none;transform:scale(1.02)}
     .auth-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none}
-    .orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.3}
-    .orb1{width:500px;height:500px;background:#2563eb;top:-120px;left:-120px}
-    .orb2{width:400px;height:400px;background:#7c3aed;bottom:-80px;right:-80px}
-    .orb3{width:250px;height:250px;background:#0891b2;top:45%;left:50%;transform:translate(-50%,-50%)}
-    .auth-card{position:relative;z-index:2;background:rgba(13,15,30,.8);backdrop-filter:blur(28px);border:1px solid var(--border2);border-radius:24px;padding:40px;width:100%;max-width:440px;box-shadow:0 40px 80px rgba(0,0,0,.6)}
+    .orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.25}
+    .orb1{width:500px;height:500px;background:#14532d;top:-100px;left:-100px}
+    .orb2{width:350px;height:350px;background:#064e3b;bottom:-60px;right:-60px}
+    .orb3{width:200px;height:200px;background:#166534;top:45%;left:50%;transform:translate(-50%,-50%)}
+    .auth-card{position:relative;z-index:2;background:rgba(13,20,16,.9);backdrop-filter:blur(28px);border:1px solid var(--border2);border-radius:20px;padding:40px;width:100%;max-width:420px;box-shadow:0 40px 80px rgba(0,0,0,.6)}
     .auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:32px}
-    .auth-icon{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--green));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:20px;color:#fff}
-    .auth-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:700}
-    .auth-name span{color:var(--blue)}
-    .auth-h1{font-family:'Syne',sans-serif;font-size:26px;font-weight:700;margin-bottom:6px}
-    .auth-sub{font-size:14px;color:var(--text2);margin-bottom:28px;line-height:1.6}
-    .auth-err{background:var(--red-dim);border:1px solid rgba(255,79,109,.3);color:#ff9aad;border-radius:var(--rsm);padding:10px 14px;font-size:13px;margin-bottom:14px;display:none}
+    .auth-icon{width:40px;height:40px;border-radius:10px;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:#051209}
+    .auth-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:800}
+    .auth-name em{color:var(--green);font-style:normal}
+    .auth-h1{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:6px;letter-spacing:-.3px}
+    .auth-sub{font-size:13px;color:var(--text2);margin-bottom:28px;line-height:1.6}
+    .auth-err{background:var(--red-dim);border:1px solid rgba(239,68,68,.3);color:#fca5a5;border-radius:var(--rsm);padding:10px 14px;font-size:13px;margin-bottom:14px;display:none}
     .fld{margin-bottom:14px}
-    .fld label{display:block;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.6px;color:var(--text2);margin-bottom:6px}
-    .fld input{width:100%;padding:12px 16px;background:var(--s3);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;transition:border-color .2s,box-shadow .2s}
-    .fld input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-glow)}
-    .abtn{width:100%;padding:14px;border:none;border-radius:var(--rsm);font-size:14px;font-weight:600;font-family:'Syne',sans-serif;cursor:pointer;transition:all .2s;margin-bottom:10px;letter-spacing:.2px}
-    .abtn.primary{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff}
-    .abtn.primary:hover{filter:brightness(1.12);transform:translateY(-1px);box-shadow:0 8px 24px rgba(79,142,255,.3)}
+    .fld label{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:6px}
+    .fld input{width:100%;padding:12px 14px;background:var(--s3);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;transition:border-color .2s,box-shadow .2s}
+    .fld input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px var(--green-glow)}
+    .abtn{width:100%;padding:13px;border:none;border-radius:var(--rsm);font-size:14px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;transition:all .2s;margin-bottom:10px;letter-spacing:.2px}
+    .abtn.primary{background:var(--green);color:#051209}
+    .abtn.primary:hover{background:#4ade80;transform:translateY(-1px);box-shadow:0 8px 24px rgba(34,197,94,.3)}
     .abtn.google{background:var(--s3);color:var(--text);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;gap:10px}
-    .abtn.google:hover{background:var(--s2);border-color:var(--blue)}
+    .abtn.google:hover{background:var(--s2);border-color:var(--green)}
     .divider{display:flex;align-items:center;gap:12px;margin:6px 0}
     .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
     .divider span{font-size:12px;color:var(--text3)}
     .auth-sw{text-align:center;font-size:13px;color:var(--text2);margin-top:10px}
-    .alink{color:var(--blue);cursor:pointer;text-decoration:underline}
+    .alink{color:var(--green);cursor:pointer;text-decoration:underline}
 
-    /* ═══ ONBOARDING ═══ */
+    /* ═══════════════════════════════════════
+       ONBOARDING
+    ═══════════════════════════════════════ */
     #onboardLayer{position:fixed;inset:0;z-index:900;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px}
     #onboardLayer.show{display:flex;animation:fadeIn .4s ease}
-    .ob-wrap{width:100%;max-width:680px}
+    .ob-wrap{width:100%;max-width:660px}
     .ob-head{text-align:center;margin-bottom:28px}
-    .ob-avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 14px;box-shadow:0 0 40px rgba(79,142,255,.5);animation:breathe 3s ease-in-out infinite}
-    @keyframes breathe{0%,100%{box-shadow:0 0 32px rgba(79,142,255,.4)}50%{box-shadow:0 0 52px rgba(79,142,255,.8)}}
-    .ob-h1{font-family:'Syne',sans-serif;font-size:26px;font-weight:700;margin-bottom:6px}
-    .ob-sub{font-size:14px;color:var(--text2)}
+    .ob-avatar{width:60px;height:60px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px;animation:breathe 3s ease-in-out infinite}
+    @keyframes breathe{0%,100%{box-shadow:0 0 24px rgba(34,197,94,.3)}50%{box-shadow:0 0 48px rgba(34,197,94,.6)}}
+    .ob-h1{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:6px}
+    .ob-sub{font-size:13px;color:var(--text2)}
     .ob-steps{display:flex;gap:6px;justify-content:center;margin-bottom:20px}
     .ob-step{width:8px;height:8px;border-radius:50%;background:var(--border2);transition:all .3s}
     .ob-step.done{background:var(--green)}
-    .ob-step.active{background:var(--blue);transform:scale(1.4)}
-    .ob-chat{background:var(--s1);border:1px solid var(--border);border-radius:var(--radius);padding:20px;min-height:280px;max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+    .ob-step.active{background:var(--green);transform:scale(1.4)}
+    .ob-chat{background:var(--s1);border:1px solid var(--border);border-radius:var(--radius);padding:20px;min-height:260px;max-height:380px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
     .ob-msg{padding:12px 16px;border-radius:12px;font-size:14px;line-height:1.65;animation:msgIn .3s ease}
     @keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-    .ob-msg.ai{background:linear-gradient(135deg,rgba(79,142,255,.08),rgba(157,110,255,.08));border:1px solid rgba(79,142,255,.2);color:var(--text)}
+    .ob-msg.ai{background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);color:var(--text)}
     .ob-msg.user{background:var(--s3);border:1px solid var(--border2);color:var(--text2);align-self:flex-end;max-width:80%}
     .ob-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
-    .ob-msg.ai .ob-lbl{color:var(--blue)}
+    .ob-msg.ai .ob-lbl{color:var(--green)}
     .ob-msg.user .ob-lbl{color:var(--text3)}
     .ob-dots{display:flex;gap:4px;align-items:center;padding:8px 14px;color:var(--text3);font-size:12px}
-    .ob-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);animation:bounce .7s infinite}
+    .ob-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:bounce .7s infinite}
     .ob-dot:nth-child(2){animation-delay:.15s}.ob-dot:nth-child(3){animation-delay:.3s}
     @keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
     .ob-row{display:flex;gap:8px}
-    .ob-row input{flex:1;padding:12px 16px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;transition:border-color .2s,box-shadow .2s}
-    .ob-row input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-glow)}
-    .ob-send{padding:12px 20px;border:none;border-radius:var(--rsm);background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-size:14px;font-weight:600;font-family:'Syne',sans-serif;cursor:pointer;transition:all .2s;white-space:nowrap}
-    .ob-send:hover{filter:brightness(1.1);transform:translateY(-1px)}
+    .ob-row input{flex:1;padding:12px 14px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;transition:border-color .2s,box-shadow .2s}
+    .ob-row input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px var(--green-glow)}
+    .ob-send{padding:12px 20px;border:none;border-radius:var(--rsm);background:var(--green);color:#051209;font-size:14px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;transition:all .2s;white-space:nowrap}
+    .ob-send:hover{background:#4ade80;transform:translateY(-1px)}
     .ob-mic{padding:12px 14px;border:1px solid var(--border2);border-radius:var(--rsm);background:var(--s3);color:var(--text2);font-size:18px;cursor:pointer;transition:all .2s;line-height:1}
     .ob-mic.rec{background:var(--red-dim);border-color:var(--red);color:var(--red);animation:pulse-r .8s infinite}
     @keyframes pulse-r{0%,100%{opacity:1}50%{opacity:.4}}
-    .ob-mic:hover:not(.rec){border-color:var(--blue);color:var(--blue)}
+    .ob-mic:hover:not(.rec){border-color:var(--green);color:var(--green)}
     .ob-skip{text-align:center;margin-top:10px}
     .ob-skip button{background:none;border:none;color:var(--text3);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif}
     .ob-skip button:hover{color:var(--text2)}
 
-    /* ═══ APP ═══ */
+    /* ═══════════════════════════════════════
+       APP LAYER
+    ═══════════════════════════════════════ */
     #appLayer{display:none}
     #appLayer.show{display:block;animation:fadeIn .3s ease}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
-    .header{background:rgba(8,9,15,.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+    /* Header */
+    .header{
+      background:rgba(8,12,10,.94);backdrop-filter:blur(16px);
+      border-bottom:1px solid var(--border);
+      padding:0 20px;height:54px;
+      display:flex;align-items:center;justify-content:space-between;
+      position:sticky;top:0;z-index:100;
+    }
     .h-brand{display:flex;align-items:center;gap:10px}
-    .h-logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--green));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#fff}
-    .h-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
-    .h-title span{color:var(--blue)}
+    .h-logo{width:30px;height:30px;border-radius:8px;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:#051209}
+    .h-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800}
+    .h-title em{color:var(--green);font-style:normal}
     .h-right{display:flex;align-items:center;gap:10px}
-    .ai-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--blue);background:var(--blue-glow);border:1px solid rgba(79,142,255,.2);border-radius:99px;padding:4px 10px}
-    .ai-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);animation:pulse 2s infinite}
+    .ai-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green);background:var(--green-dim);border:1px solid rgba(34,197,94,.2);border-radius:99px;padding:4px 10px}
+    .ai-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
-    .user-chip{display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--border);border-radius:99px;padding:5px 12px 5px 5px;cursor:pointer;transition:border-color .2s}
+    .user-chip{display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--border);border-radius:99px;padding:4px 12px 4px 4px;cursor:pointer;transition:border-color .2s}
     .user-chip:hover{border-color:var(--border2)}
-    .u-av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+    .u-av{width:26px;height:26px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#051209;flex-shrink:0}
     .u-name{font-size:13px;font-weight:500;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
+    /* Nav tabs */
     .nav{background:var(--s1);border-bottom:1px solid var(--border);display:flex;padding:0 12px;overflow-x:auto;scrollbar-width:none;gap:2px}
     .nav::-webkit-scrollbar{display:none}
-    .nav-tab{padding:13px 14px;cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s;user-select:none;display:flex;align-items:center;gap:5px}
-    .nav-tab:hover{color:var(--text)}
-    .nav-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+    .nav-tab{padding:13px 14px;cursor:pointer;color:var(--text3);font-size:13px;font-weight:500;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s;user-select:none;display:flex;align-items:center;gap:5px}
+    .nav-tab:hover{color:var(--text2)}
+    .nav-tab.active{color:var(--green);border-bottom-color:var(--green)}
 
-    .main{max-width:1000px;margin:0 auto;padding:24px 16px 80px}
+    /* Main */
+    .main{max-width:980px;margin:0 auto;padding:24px 16px 80px}
     .tab-section{display:none}
     .tab-section.active{display:block;animation:fadeIn .2s ease}
 
+    /* Cards */
     .card{background:var(--s1);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
-    .card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;margin-bottom:16px}
+    .card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:16px;color:var(--text)}
+
+    /* Stats */
     .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin-bottom:16px}
     .stat-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;transition:border-color .2s,transform .15s}
     .stat-card:hover{border-color:var(--border2);transform:translateY(-1px)}
     .stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-    .sc-blue::after{background:var(--blue)}.sc-green::after{background:var(--green)}.sc-red::after{background:var(--red)}.sc-yellow::after{background:var(--yellow)}.sc-purple::after{background:var(--purple)}
-    .stat-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;font-weight:500}
-    .stat-value{font-size:21px;font-weight:600;font-family:'DM Mono',monospace}
+    .sc-green::after{background:var(--green)}.sc-red::after{background:var(--red)}.sc-yellow::after{background:var(--yellow)}.sc-blue::after{background:var(--blue)}.sc-purple::after{background:var(--purple)}
+    .stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;font-weight:600}
+    .stat-value{font-size:20px;font-weight:600;font-family:'DM Mono',monospace}
     .stat-sub{font-size:11px;color:var(--text3);margin-top:3px}
 
+    /* Forms */
     .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-bottom:14px}
     .form-group{display:flex;flex-direction:column;gap:5px}
-    .form-label{font-size:10px;color:var(--text2);font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+    .form-label{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.6px}
     input,select,textarea{background:var(--s2);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;transition:border-color .15s,box-shadow .15s;appearance:none}
-    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-glow)}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px var(--green-glow)}
     input[type="color"]{padding:4px 6px;height:38px;cursor:pointer}
-    select option{background:#191d32}
+    select option{background:var(--s3)}
     textarea{resize:vertical;min-height:72px;line-height:1.5}
 
-    .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--rsm);border:none;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap}
+    /* Buttons */
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--rsm);border:none;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap}
     .btn:active{transform:scale(.97)}
-    .btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff}
-    .btn-primary:hover{filter:brightness(1.1);box-shadow:0 4px 16px rgba(79,142,255,.3)}
-    .btn-success{background:var(--green);color:#001a10}
+    .btn-primary{background:var(--green);color:#051209}
+    .btn-primary:hover{background:#4ade80;box-shadow:0 4px 16px rgba(34,197,94,.3)}
+    .btn-success{background:var(--green);color:#051209}
     .btn-danger{background:var(--red);color:#fff}
-    .btn-ghost{background:var(--s2);color:var(--text);border:1px solid var(--border)}
-    .btn-ghost:hover{border-color:var(--border2);background:var(--s3)}
-    .btn-ai{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;font-weight:600}
-    .btn-ai:hover{filter:brightness(1.1);box-shadow:0 4px 16px rgba(157,110,255,.3)}
+    .btn-ghost{background:var(--s2);color:var(--text2);border:1px solid var(--border)}
+    .btn-ghost:hover{border-color:var(--border2);background:var(--s3);color:var(--text)}
+    .btn-ai{background:linear-gradient(135deg,var(--green2),var(--green));color:#051209;font-weight:700}
+    .btn-ai:hover{filter:brightness(1.1);box-shadow:0 4px 16px rgba(34,197,94,.3)}
     .btn-sm{padding:6px 12px;font-size:12px}
-    .btn-icon{background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;padding:5px 8px;font-size:13px;font-family:'DM Sans',sans-serif;transition:all .15s;line-height:1}
+    .btn-icon{background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text3);cursor:pointer;padding:5px 8px;font-size:13px;font-family:'DM Sans',sans-serif;transition:all .15s;line-height:1}
     .btn-icon:hover{color:var(--text);border-color:var(--border2);background:var(--s2)}
     .btn-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 
+    /* Transactions */
     .tx-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--rsm);margin-bottom:4px;background:var(--s2);border:1px solid transparent;transition:border-color .15s}
     .tx-item:hover{border-color:var(--border)}
     .tx-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
     .tx-info{flex:1;min-width:0}
     .tx-desc{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .tx-meta{font-size:11px;color:var(--text2);margin-top:2px;font-family:'DM Mono',monospace}
+    .tx-meta{font-size:11px;color:var(--text3);margin-top:2px;font-family:'DM Mono',monospace}
     .tx-amount{font-size:14px;font-weight:600;flex-shrink:0;font-family:'DM Mono',monospace}
     .tx-actions{display:flex;gap:4px;flex-shrink:0}
 
+    /* Progress */
     .progress-bar{background:var(--s3);border-radius:999px;height:6px;overflow:hidden;margin:8px 0}
     .progress-fill{height:100%;border-radius:999px;transition:width .5s cubic-bezier(.4,0,.2,1)}
 
+    /* Meta cards */
     .meta-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;transition:border-color .2s}
     .meta-card:hover{border-color:var(--border2)}
     .meta-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
 
+    /* Layout helpers */
     .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
     .sec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-    .sec-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700}
+    .sec-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800}
     .chart-wrap{position:relative}
-    .empty-st{text-align:center;padding:36px 20px;color:var(--text2)}
+    .empty-st{text-align:center;padding:36px 20px;color:var(--text3)}
     .empty-icon{font-size:36px;margin-bottom:10px}
 
-    .box-g{background:var(--green-dim);border:1px solid rgba(0,229,160,.2);color:#6effd8;border-radius:var(--rsm);padding:10px 14px;font-size:13px;margin-bottom:10px;line-height:1.6}
-    .box-y{background:var(--yellow-dim);border:1px solid rgba(255,204,68,.2);color:#ffe57a;border-radius:var(--rsm);padding:10px 14px;font-size:13px;margin-bottom:10px;line-height:1.6}
-    .box-r{background:var(--red-dim);border:1px solid rgba(255,79,109,.2);color:#ff9aad;border-radius:var(--rsm);padding:10px 14px;font-size:13px;margin-bottom:10px;line-height:1.6}
-    .box-b{background:var(--blue-glow);border:1px solid rgba(79,142,255,.2);color:#93c5fd;border-radius:var(--rsm);padding:10px 14px;font-size:13px;margin-bottom:10px;line-height:1.6}
+    /* Alert boxes */
+    .box-g{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);color:#86efac;border-radius:var(--rsm);padding:10px 14px;font-size:13px;margin-bottom:10px;line-height:1.6}
+    .box-y{background:var(--yellow-dim);border:1px solid rgba(245,158,11,.2);color:#fcd34d;border-radius:var(--rsm);padding:10px 14px;font-size:13px;margin-bottom:10px;line-height:1.6}
+    .box-r{background:var(--red-dim);border:1px solid rgba(239,68,68,.2);color:#fca5a5;border-radius:var(--rsm);padding:10px 14px;font-size:13px;margin-bottom:10px;line-height:1.6}
+    .box-b{background:var(--blue-dim);border:1px solid rgba(56,189,248,.2);color:#7dd3fc;border-radius:var(--rsm);padding:10px 14px;font-size:13px;margin-bottom:10px;line-height:1.6}
 
+    /* Modals app */
     .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px)}
     .modal-overlay.open{display:flex}
     .modal{background:var(--s1);border:1px solid var(--border2);border-radius:var(--radius);padding:24px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto}
-    .modal-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:18px}
+    .modal-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:18px}
 
+    /* Toast */
     .toast{position:fixed;bottom:24px;right:24px;background:var(--s2);border:1px solid var(--border2);border-left:3px solid var(--green);border-radius:12px;padding:11px 18px;font-size:13px;z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);max-width:300px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
     .toast.show{transform:translateY(0);opacity:1}
     .toast.toast-red{border-left-color:var(--red)}
     .toast.toast-blue{border-left-color:var(--blue)}
     .toast.toast-yellow{border-left-color:var(--yellow)}
 
-    .ai-panel{background:linear-gradient(135deg,rgba(79,142,255,.04),rgba(157,110,255,.04));border:1px solid rgba(79,142,255,.2);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+    /* AI Panel */
+    .ai-panel{background:rgba(34,197,94,.04);border:1px solid rgba(34,197,94,.15);border-radius:var(--radius);padding:20px;margin-bottom:16px}
     .ai-ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-    .ai-title{display:flex;align-items:center;gap:8px;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:var(--blue)}
+    .ai-title{display:flex;align-items:center;gap:8px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--green)}
     .ai-msgs{display:flex;flex-direction:column;gap:10px;max-height:400px;overflow-y:auto;margin-bottom:14px;padding-right:4px}
     .ai-msg{padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.65;animation:fadeIn .25s ease}
-    .ai-msg.assistant{background:rgba(79,142,255,.07);border:1px solid rgba(79,142,255,.15);color:var(--text)}
+    .ai-msg.assistant{background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);color:var(--text)}
     .ai-msg.user{background:var(--s2);border:1px solid var(--border);color:var(--text2);align-self:flex-end;max-width:85%}
     .ai-ml{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
-    .ai-msg.assistant .ai-ml{color:var(--blue)}
+    .ai-msg.assistant .ai-ml{color:var(--green)}
     .ai-msg.user .ai-ml{color:var(--text3)}
     .ai-ir{display:flex;gap:8px}
     .ai-ir textarea{flex:1;min-height:44px;max-height:100px;padding:10px 12px}
     .ai-typ{display:flex;align-items:center;gap:6px;padding:8px 14px;color:var(--text3);font-size:12px}
     .ai-typ-d{display:flex;gap:3px}
-    .ai-typ-d span{width:5px;height:5px;border-radius:50%;background:var(--blue);animation:bounce .7s infinite}
+    .ai-typ-d span{width:5px;height:5px;border-radius:50%;background:var(--green);animation:bounce .7s infinite}
     .ai-typ-d span:nth-child(2){animation-delay:.15s}
     .ai-typ-d span:nth-child(3){animation-delay:.3s}
     .q-btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-    .q-btn{background:var(--s2);border:1px solid var(--border);border-radius:99px;color:var(--text2);font-size:12px;padding:5px 12px;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif}
-    .q-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-glow)}
+    .q-btn{background:var(--s2);border:1px solid var(--border);border-radius:99px;color:var(--text3);font-size:12px;padding:5px 12px;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif}
+    .q-btn:hover{border-color:var(--green);color:var(--green);background:var(--green-dim)}
 
+    /* Amortization table */
     .amort-t{width:100%;border-collapse:collapse;font-size:12px;font-family:'DM Mono',monospace}
     .amort-t th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);padding:6px 10px;border-bottom:1px solid var(--border);text-align:left}
-    .amort-t td{padding:7px 10px;border-bottom:1px solid rgba(19,22,38,.9);color:var(--text2)}
-    .amort-t tr.hl td{background:rgba(0,229,160,.06);color:var(--text);font-weight:500}
+    .amort-t td{padding:7px 10px;border-bottom:1px solid rgba(13,20,16,.9);color:var(--text2)}
+    .amort-t tr.hl td{background:rgba(34,197,94,.05);color:var(--text);font-weight:500}
     .amort-t tr:hover td{background:var(--s2)}
 
+    /* Timeline */
     .tl{position:relative;padding-left:22px}
     .tl::before{content:'';position:absolute;left:6px;top:8px;bottom:8px;width:2px;background:var(--border);border-radius:1px}
     .tl-i{position:relative;margin-bottom:20px}
     .tl-d{position:absolute;left:-20px;top:4px;width:12px;height:12px;border-radius:50%;border:2px solid var(--bg)}
     .tl-mo{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:4px;font-family:'DM Mono',monospace}
-    .tl-t{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;margin-bottom:3px}
+    .tl-t{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:3px}
     .tl-desc{font-size:12px;color:var(--text2);line-height:1.5}
 
+    /* Alert items */
     .al-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:var(--rsm);margin-bottom:8px;border-left:3px solid}
-    .al-item.danger{background:var(--red-dim);border-color:var(--red);color:#ff9aad}
-    .al-item.warning{background:var(--yellow-dim);border-color:var(--yellow);color:#ffe57a}
-    .al-item.info{background:var(--blue-glow);border-color:var(--blue);color:#93c5fd}
-    .al-item.success{background:var(--green-dim);border-color:var(--green);color:#6effd8}
+    .al-item.danger{background:var(--red-dim);border-color:var(--red);color:#fca5a5}
+    .al-item.warning{background:var(--yellow-dim);border-color:var(--yellow);color:#fcd34d}
+    .al-item.info{background:var(--blue-dim);border-color:var(--blue);color:#7dd3fc}
+    .al-item.success{background:rgba(34,197,94,.07);border-color:var(--green);color:#86efac}
     .al-t{font-size:13px;font-weight:600;margin-bottom:2px}
     .al-d{font-size:12px;opacity:.85;line-height:1.5}
 
+    /* Plan table */
     .plan-t{width:100%;border-collapse:collapse;font-size:12px}
     .plan-t th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);padding:6px 10px;border-bottom:1px solid var(--border);text-align:left}
-    .plan-t td{padding:7px 10px;border-bottom:1px solid rgba(19,22,38,.7);font-size:13px}
-    .plan-t tr:last-child td{background:rgba(79,142,255,.05);font-weight:600}
+    .plan-t td{padding:7px 10px;border-bottom:1px solid rgba(13,20,16,.7);font-size:13px}
+    .plan-t tr:last-child td{background:rgba(34,197,94,.05);font-weight:600}
     .plan-t tr:hover td{background:var(--s2)}
 
-    .wb{background:linear-gradient(135deg,rgba(79,142,255,.1),rgba(157,110,255,.1));border:1px solid rgba(79,142,255,.25);border-radius:var(--radius);padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:16px}
-    .wb-ico{font-size:30px;flex-shrink:0}
-    .wb h2{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:4px}
+    /* Welcome banner */
+    .wb{background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:var(--radius);padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:16px}
+    .wb-ico{font-size:28px;flex-shrink:0}
+    .wb h2{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:4px}
     .wb p{font-size:13px;color:var(--text2);line-height:1.5}
 
     hr.div{border:none;border-top:1px solid var(--border);margin:14px 0}
+
     @media(max-width:640px){.two-col{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr 1fr}.nav-tab{padding:12px 10px;font-size:12px}}
     @media(max-width:380px){.stats-grid{grid-template-columns:1fr}}
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
 <!-- ══════════ LANDING ══════════ -->
 <div id="landingPage">
-<div id="cursor"></div>
-<div id="cursor-ring"></div>
 
-<!-- NAVBAR -->
-<nav>
-  <div class="nav-logo">Ahorrapp<span> Pro</span></div>
-  <a href="#auth" class="nav-btn" onclick="showAuth()">Ingresar</a>
-</nav>
-
-<!-- HERO -->
-<section id="hero">
-  <div class="hero-grid"></div>
-  <div class="scanline"></div>
-  <div class="corner tr"></div>
-  <div class="corner bl"></div>
-
-  <canvas id="orb-canvas"></canvas>
-
-  <div class="hero-content">
-    <p class="hero-tag">// Finanzas personales · IA · Colombia</p>
-    <h1 class="hero-title">
-      Tu dinero,<br>
-      <span class="accent">inteligente.</span><br>
-      <span class="accent2">Finalmente.</span>
-    </h1>
-    <p class="hero-sub">
-      Asesor financiero con IA que conoce tu situación real. Dashboard personalizado, metas de ahorro, control de deudas y espacios compartidos para parejas y equipos.
-    </p>
-    <div class="hero-cta">
-      <a href="#" class="btn-primary" onclick="showAuth()">⚡ Start Now</a>
-      <a href="#slides-section" class="btn-ghost">Ver cómo funciona →</a>
+  <nav class="l-nav">
+    <div class="l-logo">Ahorrapp<em> Pro</em></div>
+    <div class="l-nav-links">
+      <button class="l-nav-link" onclick="document.getElementById('l-slides').scrollIntoView({behavior:'smooth'})">Funcionalidades</button>
+      <button class="l-nav-link" onclick="document.getElementById('l-cta').scrollIntoView({behavior:'smooth'})">Precios</button>
     </div>
-    <div class="hero-stats">
-      <div>
-        <div class="hero-stat-num">IA</div>
-        <div class="hero-stat-label">Asesor 24/7</div>
+    <button class="l-nav-cta" onclick="showAuth()">Ingresar →</button>
+  </nav>
+
+  <section id="l-hero">
+    <div class="l-hero-bg"></div>
+    <div class="l-grid"></div>
+    <canvas id="l-orb-canvas"></canvas>
+
+    <div class="l-hero-content">
+      <div class="l-tag"><div class="l-tag-dot"></div>IA Financiera · Colombia</div>
+      <h1 class="l-h1">
+        Toma el control<br>
+        de tu <span class="l-accent">dinero.</span><br>
+        <span class="l-muted">De verdad.</span>
+      </h1>
+      <p class="l-sub">Asesor financiero con IA que conoce tu situación real — ingresos, deudas, metas. No consejos genéricos. Tu plan, con tus números.</p>
+      <div class="l-cta-row">
+        <button class="l-btn-primary" onclick="showAuth()">⚡ Empezar gratis</button>
+        <button class="l-btn-ghost" onclick="document.getElementById('l-slides').scrollIntoView({behavior:'smooth'})">Ver cómo funciona →</button>
       </div>
-      <div>
-        <div class="hero-stat-num">100%</div>
-        <div class="hero-stat-label">Personalizado</div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- SLIDES SECTION -->
-<section id="slides-section">
-  <div class="section-header reveal">
-    <p class="section-tag">// Funcionalidades</p>
-    <h2 class="section-title">Todo lo que necesitas<br>para tomar control</h2>
-  </div>
-
-  <div class="slides-wrapper">
-    <div class="slides-track" id="slidesTrack">
-
-      <div class="slide-card active">
-        <p class="slide-num">01 / 05</p>
-        <span class="slide-icon">🤖</span>
-        <h3 class="slide-title">Asesor <span class="hl">IA</span> que te conoce</h3>
-        <p class="slide-desc">No es un chatbot genérico. Tu asesor tiene acceso a todos tus datos financieros reales — ingresos, gastos fijos, deudas y metas — y te da consejos concretos con números exactos en colombiano.</p>
-        <div class="slide-feature">Powered by Claude Sonnet · Respuestas en segundos · Contexto financiero completo</div>
-      </div>
-
-      <div class="slide-card">
-        <p class="slide-num">02 / 05</p>
-        <span class="slide-icon">📊</span>
-        <h3 class="slide-title">Dashboard <span class="hl">inteligente</span></h3>
-        <p class="slide-desc">Onboarding conversacional de 5 preguntas y la IA configura tu app automáticamente. Solo ves los módulos que necesitas. Alertas proactivas cuando algo en tus finanzas merece atención.</p>
-        <div class="slide-feature">Tabs dinámicos · Alertas en tiempo real · Configuración automática por IA</div>
-      </div>
-
-      <div class="slide-card">
-        <p class="slide-num">03 / 05</p>
-        <span class="slide-icon">🏠</span>
-        <h3 class="slide-title">Tu meta de <span class="hl">apartamento</span></h3>
-        <p class="slide-desc">Plan de amortización mes a mes hacia tu meta de vivienda. Calcula cuánto necesitas ahorrar, cuándo puedes lograrlo con tus cesantías, y qué pasa con tu deuda de TC en el camino.</p>
-        <div class="slide-feature">Amortización TC · Proyección de cesantías · Timeline personalizado</div>
-      </div>
-
-      <div class="slide-card">
-        <p class="slide-num">04 / 05</p>
-        <span class="slide-icon">👥</span>
-        <h3 class="slide-title">Espacios <span class="hl">compartidos</span></h3>
-        <p class="slide-desc">Finanzas en pareja o en equipo, sin caos. Crea un espacio compartido, invita con un link, define roles (owner, admin, miembro, viewer) y tomen decisiones financieras juntos con reportes consolidados.</p>
-        <div class="slide-feature">Chat en tiempo real · Reportes del equipo · Roles y permisos</div>
-      </div>
-
-      <div class="slide-card">
-        <p class="slide-num">05 / 05</p>
-        <span class="slide-icon">🎯</span>
-        <h3 class="slide-title">Metas y <span class="hl">control total</span></h3>
-        <p class="slide-desc">Crea metas de ahorro, abona cuando puedas y sigue tu progreso. Registra movimientos con categorías inteligentes, filtra por fecha y exporta todo en JSON o CSV cuando quieras.</p>
-        <div class="slide-feature">Metas de ahorro · Reportes con gráficas · Backup exportable</div>
-      </div>
-
-    </div>
-  </div>
-
-  <div class="slides-controls reveal">
-    <button class="slide-btn" id="prevBtn" onclick="moveSlide(-1)">←</button>
-    <div class="slide-dots" id="slideDots">
-      <div class="dot active" onclick="goToSlide(0)"></div>
-      <div class="dot" onclick="goToSlide(1)"></div>
-      <div class="dot" onclick="goToSlide(2)"></div>
-      <div class="dot" onclick="goToSlide(3)"></div>
-      <div class="dot" onclick="goToSlide(4)"></div>
-    </div>
-    <button class="slide-btn" id="nextBtn" onclick="moveSlide(1)">→</button>
-  </div>
-</section>
-
-<!-- CTA SECTION -->
-<section id="cta-section">
-  <div class="cta-glow"></div>
-  <h2 class="cta-title reveal">
-    Empieza gratis.<br>
-    <span class="line2">Hoy mismo.</span>
-  </h2>
-  <p class="cta-sub reveal">5 minutos de onboarding y tu asesor IA ya sabe más de tus finanzas que cualquier app genérica.</p>
-  <a href="#" class="cta-btn reveal" onclick="showAuth()">⚡ Start Now — Es gratis</a>
-  <p class="cta-note reveal">Sin tarjeta de crédito · Sin período de prueba · Sin letra pequeña</p>
-</section>
-
-<!-- FOOTER -->
-<footer>
-  <div class="footer-top">
-    <div class="footer-brand">
-      <div class="logo">Ahorrapp Pro</div>
-      <p class="tagline">Finanzas personales con IA para colombianos que quieren tomar el control de su plata.</p>
-    </div>
-    <div class="footer-links">
-      <div class="footer-col">
-        <h4>Producto</h4>
-        <a href="#slides-section">Funcionalidades</a>
-        <a href="#" onclick="showAuth()">Registrarse</a>
-        <a href="#" onclick="showAuth()">Iniciar sesión</a>
-      </div>
-      <div class="footer-col">
-        <h4>Legal</h4>
-        <a href="#" onclick="openModal('terms')">Términos de servicio</a>
-        <a href="#" onclick="openModal('privacy')">Política de privacidad</a>
-      </div>
-      <div class="footer-col">
-        <h4>Soporte</h4>
-        <a href="mailto:soporte@ahorrapp.pro">Contacto</a>
+      <div class="l-stats">
+        <div><div class="l-stat-n">IA</div><div class="l-stat-l">Asesor 24/7</div></div>
+        <div><div class="l-stat-n">100%</div><div class="l-stat-l">Personalizado</div></div>
+        <div><div class="l-stat-n">∞</div><div class="l-stat-l">Consultas</div></div>
       </div>
     </div>
-  </div>
-  <div class="footer-bottom">
-    <p class="footer-copy">© 2026 Ahorrapp Pro. Hecho con ☕ en Colombia.</p>
-    <div class="footer-legal">
-      <a href="#" onclick="openModal('terms')">Términos de servicio</a>
-      <a href="#" onclick="openModal('privacy')">Política de privacidad</a>
+
+    <div class="l-float-card">
+      <div class="l-fc-label">Balance mes</div>
+      <div class="l-fc-value">+$1.2M</div>
+      <div class="l-fc-sub"><span class="l-fc-badge">+18%</span> vs mes anterior</div>
     </div>
-  </div>
-</footer>
+  </section>
 
-<!-- MODAL TÉRMINOS -->
-<div class="modal-overlay" id="termsModal">
-  <div class="modal-box">
-    <button class="modal-close" onclick="closeModal('terms')">✕</button>
-    <h2 class="modal-title">Términos de Servicio</h2>
-    <p class="modal-date">Última actualización: Abril 2026</p>
-    <div class="modal-content">
-      <h3>1. Aceptación</h3>
-      <p>Al acceder y usar Ahorrapp Pro, aceptas estos Términos de Servicio. Si no estás de acuerdo con alguna parte, no puedes usar la aplicación.</p>
+  <!-- Slides -->
+  <section id="l-slides">
+    <div class="l-section-header">
+      <p class="l-section-tag">Funcionalidades</p>
+      <h2 class="l-section-title">Todo lo que necesitas<br>para tomar control</h2>
+    </div>
+    <div class="l-slides-wrapper">
+      <div class="l-slides-track" id="lSlidesTrack">
+        <div class="l-slide active">
+          <p class="l-slide-num">01 / 05</p>
+          <span class="l-slide-icon">🤖</span>
+          <h3 class="l-slide-title">Asesor <span class="hl">IA</span> que te conoce</h3>
+          <p class="l-slide-desc">No es un chatbot genérico. Tiene acceso a tus datos reales — ingresos, gastos fijos, deudas y metas — y te da consejos con números exactos en colombiano.</p>
+          <div class="l-slide-pill">⚡ Powered by Claude Sonnet · Responde en segundos</div>
+        </div>
+        <div class="l-slide">
+          <p class="l-slide-num">02 / 05</p>
+          <span class="l-slide-icon">📊</span>
+          <h3 class="l-slide-title">Dashboard <span class="hl">inteligente</span></h3>
+          <p class="l-slide-desc">Onboarding de 5 preguntas y la IA configura tu app automáticamente. Solo ves los módulos que necesitas. Alertas proactivas cuando algo merece atención.</p>
+          <div class="l-slide-pill">🎯 Tabs dinámicos · Alertas en tiempo real</div>
+        </div>
+        <div class="l-slide">
+          <p class="l-slide-num">03 / 05</p>
+          <span class="l-slide-icon">🏠</span>
+          <h3 class="l-slide-title">Tu meta de <span class="hl">apartamento</span></h3>
+          <p class="l-slide-desc">Plan de amortización mes a mes. Calcula cuánto necesitas ahorrar, cuándo lo logras con tus cesantías, y qué pasa con tu deuda TC en el camino.</p>
+          <div class="l-slide-pill">📅 Amortización TC · Proyección de cesantías</div>
+        </div>
+        <div class="l-slide">
+          <p class="l-slide-num">04 / 05</p>
+          <span class="l-slide-icon">👥</span>
+          <h3 class="l-slide-title">Espacios <span class="hl">compartidos</span></h3>
+          <p class="l-slide-desc">Finanzas en pareja o equipo sin caos. Invita con un link, define roles y tomen decisiones juntos con reportes consolidados y chat en tiempo real.</p>
+          <div class="l-slide-pill">💬 Chat en tiempo real · Roles y permisos</div>
+        </div>
+        <div class="l-slide">
+          <p class="l-slide-num">05 / 05</p>
+          <span class="l-slide-icon">🎯</span>
+          <h3 class="l-slide-title">Metas y <span class="hl">control total</span></h3>
+          <p class="l-slide-desc">Crea metas de ahorro, abona cuando puedas y sigue tu progreso. Registra movimientos, filtra por categoría y exporta todo en JSON o CSV.</p>
+          <div class="l-slide-pill">💾 Backup exportable · Reportes con gráficas</div>
+        </div>
+      </div>
+    </div>
+    <div class="l-controls">
+      <button class="l-btn-slide" onclick="lMoveSlide(-1)">←</button>
+      <div class="l-dots" id="lDots">
+        <div class="l-dot active" onclick="lGoTo(0)"></div>
+        <div class="l-dot" onclick="lGoTo(1)"></div>
+        <div class="l-dot" onclick="lGoTo(2)"></div>
+        <div class="l-dot" onclick="lGoTo(3)"></div>
+        <div class="l-dot" onclick="lGoTo(4)"></div>
+      </div>
+      <button class="l-btn-slide" onclick="lMoveSlide(1)">→</button>
+    </div>
+  </section>
 
-      <h3>2. Descripción del servicio</h3>
-      <p>Ahorrapp Pro es una aplicación de finanzas personales con inteligencia artificial diseñada para usuarios en Colombia. Ofrece seguimiento de ingresos y gastos, metas de ahorro, análisis de deudas y asesoría financiera automatizada.</p>
+  <!-- CTA -->
+  <section id="l-cta">
+    <h2 class="l-cta-title">Empieza <span class="hl">hoy.</span><br>Es gratis.</h2>
+    <p class="l-cta-sub">5 minutos de onboarding y tu asesor IA ya sabe más de tus finanzas que cualquier app genérica.</p>
+    <button class="l-cta-btn" onclick="showAuth()">⚡ Crear cuenta gratis</button>
+    <p class="l-cta-note">Sin tarjeta · Sin período de prueba · Sin letra pequeña</p>
+  </section>
 
-      <h3>3. Uso aceptable</h3>
-      <p>Te comprometes a:</p>
-      <ul>
-        <li>Proporcionar información financiera veraz para obtener consejos precisos</li>
-        <li>No usar la aplicación para actividades ilegales</li>
-        <li>Mantener la confidencialidad de tu cuenta</li>
-        <li>No intentar acceder a datos de otros usuarios</li>
-      </ul>
+  <!-- Footer -->
+  <footer class="l-footer">
+    <div class="l-footer-top">
+      <div class="l-footer-brand">
+        <div class="logo">Ahorrapp<em> Pro</em></div>
+        <p>Finanzas personales con IA para los que quieren tomar el control de su plata.</p>
+      </div>
+      <div class="l-footer-links">
+        <div class="l-fc">
+          <h4>Producto</h4>
+          <a onclick="document.getElementById('l-slides').scrollIntoView({behavior:'smooth'})">Funcionalidades</a>
+          <a onclick="showAuth()">Registrarse</a>
+          <a onclick="showAuth()">Iniciar sesión</a>
+        </div>
+        <div class="l-fc">
+          <h4>Legal</h4>
+          <a onclick="lOpenModal('terms')">Términos de servicio</a>
+          <a onclick="lOpenModal('privacy')">Política de privacidad</a>
+        </div>
+        <div class="l-fc">
+          <h4>Soporte</h4>
+          <a href="mailto:soporte@ahorrapp.pro">Contacto</a>
+        </div>
+      </div>
+    </div>
+    <div class="l-footer-bottom">
+      <p class="l-footer-copy">© 2026 Ahorrapp Pro. Hecho con ☕ en Colombia.</p>
+      <div class="l-footer-legal">
+        <a onclick="lOpenModal('terms')">Términos de servicio</a>
+        <a onclick="lOpenModal('privacy')">Política de privacidad</a>
+      </div>
+    </div>
+  </footer>
+</div>
 
-      <h3>4. Información financiera y descargo</h3>
-      <p>Ahorrapp Pro proporciona herramientas de análisis y asesoría de carácter informativo. Los consejos generados por IA <strong>no constituyen asesoría financiera profesional certificada</strong>. Para decisiones financieras importantes, consulta un asesor financiero certificado.</p>
-
-      <h3>5. Cuentas de usuario</h3>
-      <p>Eres responsable de mantener la seguridad de tu cuenta y contraseña. Notifícanos inmediatamente si sospechas de acceso no autorizado. No nos hacemos responsables por pérdidas derivadas del uso no autorizado de tu cuenta.</p>
-
-      <h3>6. Datos y privacidad</h3>
-      <p>Tus datos financieros se almacenan en Firebase (Google Cloud) con cifrado en tránsito y en reposo. No vendemos tu información personal a terceros. Consulta nuestra Política de Privacidad para más detalles.</p>
-
-      <h3>7. Disponibilidad del servicio</h3>
-      <p>Ofrecemos el servicio "tal como está" y no garantizamos disponibilidad ininterrumpida. Podemos modificar o interrumpir el servicio con aviso previo razonable.</p>
-
-      <h3>8. Propiedad intelectual</h3>
-      <p>Ahorrapp Pro y todo su contenido, características y funcionalidad son propiedad exclusiva del desarrollador. No puedes copiar, modificar o distribuir ninguna parte sin autorización escrita.</p>
-
-      <h3>9. Modificaciones</h3>
-      <p>Podemos actualizar estos términos ocasionalmente. Te notificaremos de cambios materiales. El uso continuado después de la notificación implica aceptación.</p>
-
-      <h3>10. Jurisdicción</h3>
-      <p>Estos términos se rigen por las leyes de la República de Colombia. Cualquier disputa se resolverá en los tribunales competentes de Bogotá, Colombia.</p>
-
-      <h3>11. Contacto</h3>
-      <p>Para preguntas sobre estos términos: soporte@ahorrapp.pro</p>
+<!-- Modal Términos -->
+<div class="l-modal-overlay" id="lTermsModal">
+  <div class="l-modal-box">
+    <button class="l-modal-close" onclick="lCloseModal('terms')">✕</button>
+    <h2 class="l-modal-title">Términos de Servicio</h2>
+    <p class="l-modal-date">Última actualización: Abril 2026</p>
+    <div class="l-modal-content">
+      <h3>1. Aceptación</h3><p>Al acceder y usar Ahorrapp Pro, aceptas estos Términos de Servicio. Si no estás de acuerdo con alguna parte, no puedes usar la aplicación.</p>
+      <h3>2. Descripción del servicio</h3><p>Ahorrapp Pro es una aplicación de finanzas personales con inteligencia artificial diseñada para usuarios en Colombia. Ofrece seguimiento de ingresos y gastos, metas de ahorro, análisis de deudas y asesoría financiera automatizada.</p>
+      <h3>3. Uso aceptable</h3><p>Te comprometes a proporcionar información financiera veraz, no usar la aplicación para actividades ilegales, mantener la confidencialidad de tu cuenta y no intentar acceder a datos de otros usuarios.</p>
+      <h3>4. Descargo de responsabilidad financiera</h3><p>Los consejos generados por IA no constituyen asesoría financiera profesional certificada. Para decisiones importantes, consulta un asesor certificado.</p>
+      <h3>5. Cuentas de usuario</h3><p>Eres responsable de mantener la seguridad de tu cuenta. No nos hacemos responsables por pérdidas derivadas del uso no autorizado.</p>
+      <h3>6. Datos y privacidad</h3><p>Tus datos se almacenan en Firebase (Google Cloud) con cifrado. No vendemos tu información personal. Ver Política de Privacidad.</p>
+      <h3>7. Propiedad intelectual</h3><p>Ahorrapp Pro y todo su contenido son propiedad exclusiva del desarrollador. No puedes copiar, modificar ni distribuir sin autorización escrita.</p>
+      <h3>8. Jurisdicción</h3><p>Estos términos se rigen por las leyes de la República de Colombia. Disputas se resolverán en los tribunales de Bogotá.</p>
+      <h3>9. Contacto</h3><p>soporte@ahorrapp.pro</p>
     </div>
   </div>
 </div>
 
-<!-- MODAL PRIVACIDAD -->
-<div class="modal-overlay" id="privacyModal">
-  <div class="modal-box">
-    <button class="modal-close" onclick="closeModal('privacy')">✕</button>
-    <h2 class="modal-title">Política de Privacidad</h2>
-    <p class="modal-date">Última actualización: Abril 2026</p>
-    <div class="modal-content">
-      <h3>1. Información que recopilamos</h3>
-      <p>Recopilamos la información que tú mismo proporcionas:</p>
-      <ul>
-        <li>Información de cuenta: nombre, email (vía Google o registro directo)</li>
-        <li>Datos financieros: ingresos, gastos, metas, deudas que ingresas manualmente</li>
-        <li>Datos de uso: cómo interactúas con la app para mejorar la experiencia</li>
-      </ul>
-
-      <h3>2. Cómo usamos tu información</h3>
-      <p>Usamos tus datos exclusivamente para:</p>
-      <ul>
-        <li>Proporcionar el servicio de seguimiento financiero personalizado</li>
-        <li>Generar consejos y análisis con IA basados en tu situación real</li>
-        <li>Mejorar la aplicación y corregir errores</li>
-        <li>Comunicarnos contigo sobre cambios importantes en el servicio</li>
-      </ul>
-
-      <h3>3. Almacenamiento y seguridad</h3>
-      <p>Tus datos se almacenan en Firebase Firestore (Google Cloud Platform) con:</p>
-      <ul>
-        <li>Cifrado en tránsito (HTTPS/TLS)</li>
-        <li>Cifrado en reposo</li>
-        <li>Reglas de seguridad que garantizan que solo tú puedes acceder a tus datos</li>
-        <li>Servidores ubicados en centros de datos de Google (us-central1)</li>
-      </ul>
-
-      <h3>4. Compartir información</h3>
-      <p><strong>No vendemos, alquilamos ni compartimos tu información personal con terceros</strong> con fines comerciales. Solo compartimos datos con:</p>
-      <ul>
-        <li>Google Firebase: almacenamiento y autenticación</li>
-        <li>Anthropic / OpenAI: procesamiento de mensajes del asesor IA (sin almacenamiento permanente por parte de estos proveedores según sus políticas)</li>
-        <li>Vercel: hosting de la aplicación</li>
-      </ul>
-
-      <h3>5. Espacios compartidos</h3>
-      <p>Si usas la función de espacios compartidos, los miembros del espacio podrán ver los reportes consolidados del grupo. Los datos individuales de cada usuario permanecen privados según los permisos configurados.</p>
-
-      <h3>6. Tus derechos</h3>
-      <p>Tienes derecho a:</p>
-      <ul>
-        <li>Acceder a todos tus datos en cualquier momento (función de exportar backup)</li>
-        <li>Corregir información incorrecta</li>
-        <li>Eliminar tu cuenta y todos tus datos permanentemente</li>
-        <li>Solicitar una copia de tus datos en formato portable (JSON/CSV)</li>
-      </ul>
-
-      <h3>7. Cookies y almacenamiento local</h3>
-      <p>Usamos cookies de sesión de Firebase para mantener tu sesión activa. No usamos cookies de rastreo ni publicidad de terceros.</p>
-
-      <h3>8. Menores de edad</h3>
-      <p>Ahorrapp Pro no está dirigido a menores de 18 años. No recopilamos intencionalmente datos de menores. Si eres padre/madre y crees que tu hijo usó la app, contáctanos para eliminar su información.</p>
-
-      <h3>9. Cambios a esta política</h3>
-      <p>Te notificaremos de cambios materiales a esta política con al menos 30 días de anticipación vía email o notificación en la app.</p>
-
-      <h3>10. Ley aplicable</h3>
-      <p>Esta política se rige por la Ley 1581 de 2012 (Ley de Protección de Datos Personales de Colombia) y sus decretos reglamentarios.</p>
-
-      <h3>11. Contacto</h3>
-      <p>Para ejercer tus derechos o hacer preguntas sobre privacidad: soporte@ahorrapp.pro</p>
+<!-- Modal Privacidad -->
+<div class="l-modal-overlay" id="lPrivacyModal">
+  <div class="l-modal-box">
+    <button class="l-modal-close" onclick="lCloseModal('privacy')">✕</button>
+    <h2 class="l-modal-title">Política de Privacidad</h2>
+    <p class="l-modal-date">Última actualización: Abril 2026</p>
+    <div class="l-modal-content">
+      <h3>1. Información que recopilamos</h3><p>Nombre, email (vía Google o registro directo), datos financieros que ingresas manualmente, y datos de uso para mejorar la experiencia.</p>
+      <h3>2. Cómo usamos tu información</h3><p>Exclusivamente para proveer el servicio de seguimiento financiero, generar consejos con IA, mejorar la app y comunicarnos sobre cambios importantes.</p>
+      <h3>3. Almacenamiento y seguridad</h3><p>Firebase Firestore con cifrado en tránsito (HTTPS/TLS) y en reposo. Reglas de seguridad que garantizan que solo tú accedes a tus datos.</p>
+      <h3>4. Compartir información</h3><p>No vendemos ni compartimos tu información con fines comerciales. Solo con: Google Firebase (almacenamiento), Anthropic/OpenAI (IA, sin almacenamiento permanente) y Vercel (hosting).</p>
+      <h3>5. Tus derechos</h3><p>Puedes acceder, corregir, eliminar tus datos y exportarlos en JSON/CSV en cualquier momento desde la app.</p>
+      <h3>6. Ley aplicable</h3><p>Ley 1581 de 2012 (Protección de Datos Personales de Colombia) y sus decretos reglamentarios.</p>
+      <h3>7. Contacto</h3><p>soporte@ahorrapp.pro</p>
     </div>
   </div>
-</div>
-
-<script>
-// ── CURSOR ──
-const cursor = document.getElementById('cursor');
-const ring   = document.getElementById('cursor-ring');
-document.addEventListener('mousemove', e => {
-  cursor.style.left = e.clientX + 'px';
-  cursor.style.top  = e.clientY + 'px';
-  ring.style.left   = e.clientX + 'px';
-  ring.style.top    = e.clientY + 'px';
-});
-document.querySelectorAll('a, button, .dot').forEach(el => {
-  el.addEventListener('mouseenter', () => {
-    cursor.style.width = '20px';
-    cursor.style.height = '20px';
-    ring.style.width = '52px';
-    ring.style.height = '52px';
-  });
-  el.addEventListener('mouseleave', () => {
-    cursor.style.width = '12px';
-    cursor.style.height = '12px';
-    ring.style.width = '36px';
-    ring.style.height = '36px';
-  });
-});
-
-// ── THREE.JS ORB ──
-const canvas = document.getElementById('orb-canvas');
-const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-renderer.setPixelRatio(window.devicePixelRatio);
-renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
-
-const scene  = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, canvas.offsetWidth / canvas.offsetHeight, 0.1, 100);
-camera.position.set(0, 0, 4.5);
-
-// Core sphere
-const geoCore = new THREE.SphereGeometry(1, 64, 64);
-const matCore = new THREE.MeshPhongMaterial({
-  color: 0x0d0a1a,
-  emissive: 0x8b5cf6,
-  emissiveIntensity: 0.15,
-  transparent: true,
-  opacity: 0.85,
-  wireframe: false,
-});
-const core = new THREE.Mesh(geoCore, matCore);
-scene.add(core);
-
-// Wireframe shell
-const geoWire = new THREE.SphereGeometry(1.02, 24, 24);
-const matWire = new THREE.MeshBasicMaterial({
-  color: 0x8b5cf6,
-  wireframe: true,
-  transparent: true,
-  opacity: 0.08,
-});
-const wire = new THREE.Mesh(geoWire, matWire);
-scene.add(wire);
-
-// Outer glow ring
-const geoRing1 = new THREE.TorusGeometry(1.4, 0.004, 8, 120);
-const matRing  = new THREE.MeshBasicMaterial({ color: 0x8b5cf6, transparent: true, opacity: 0.5 });
-const ring1 = new THREE.Mesh(geoRing1, matRing);
-ring1.rotation.x = Math.PI / 2.5;
-scene.add(ring1);
-
-const geoRing2 = new THREE.TorusGeometry(1.7, 0.002, 8, 120);
-const matRing2 = new THREE.MeshBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.25 });
-const ring2 = new THREE.Mesh(geoRing2, matRing2);
-ring2.rotation.x = Math.PI / 3;
-ring2.rotation.y = Math.PI / 4;
-scene.add(ring2);
-
-// Particles
-const particleCount = 300;
-const positions = new Float32Array(particleCount * 3);
-for (let i = 0; i < particleCount; i++) {
-  const theta = Math.random() * Math.PI * 2;
-  const phi   = Math.acos(2 * Math.random() - 1);
-  const r     = 1.2 + Math.random() * 1.2;
-  positions[i*3]   = r * Math.sin(phi) * Math.cos(theta);
-  positions[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
-  positions[i*3+2] = r * Math.cos(phi);
-}
-const geoParts = new THREE.BufferGeometry();
-geoParts.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-const matParts = new THREE.PointsMaterial({ color: 0x8b5cf6, size: 0.022, transparent: true, opacity: 0.6 });
-const particles = new THREE.Points(geoParts, matParts);
-scene.add(particles);
-
-// Lights
-scene.add(new THREE.AmbientLight(0x0d0a1a, 1));
-const light1 = new THREE.PointLight(0x8b5cf6, 3, 8);
-light1.position.set(2, 2, 2);
-scene.add(light1);
-const light2 = new THREE.PointLight(0x3b82f6, 1.5, 8);
-light2.position.set(-2, -1, 1);
-scene.add(light2);
-
-// Mouse interaction
-let mouseX = 0, mouseY = 0;
-document.addEventListener('mousemove', e => {
-  mouseX = (e.clientX / window.innerWidth  - 0.5) * 0.6;
-  mouseY = (e.clientY / window.innerHeight - 0.5) * 0.4;
-});
-
-// Animate
-function animate() {
-  requestAnimationFrame(animate);
-  const t = Date.now() * 0.001;
-
-  core.rotation.y  += 0.003;
-  core.rotation.x  += 0.001;
-  wire.rotation.y  -= 0.002;
-  wire.rotation.x  += 0.001;
-  ring1.rotation.z += 0.004;
-  ring2.rotation.z -= 0.003;
-  ring2.rotation.y += 0.002;
-  particles.rotation.y += 0.001;
-
-  // Float
-  core.position.y = Math.sin(t * 0.5) * 0.08;
-  wire.position.y = core.position.y;
-
-  // Mouse follow
-  scene.rotation.y += (mouseX - scene.rotation.y) * 0.04;
-  scene.rotation.x += (mouseY - scene.rotation.x) * 0.04;
-
-  // Pulse emissive
-  matCore.emissiveIntensity = 0.12 + Math.sin(t * 1.5) * 0.06;
-
-  renderer.render(scene, camera);
-}
-animate();
-
-window.addEventListener('resize', () => {
-  const w = canvas.offsetWidth;
-  const h = canvas.offsetHeight;
-  renderer.setSize(w, h);
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
-});
-
-// ── SLIDES ──
-let currentSlide = 0;
-const totalSlides = 5;
-const track = document.getElementById('slidesTrack');
-const cards  = track.querySelectorAll('.slide-card');
-const dots   = document.querySelectorAll('.dot');
-
-function updateSlides() {
-  const cardWidth = cards[0].offsetWidth + 24;
-  track.style.transform = `translateX(-${currentSlide * cardWidth}px)`;
-  cards.forEach((c, i) => c.classList.toggle('active', i === currentSlide));
-  dots.forEach((d, i) => d.classList.toggle('active', i === currentSlide));
-}
-
-function moveSlide(dir) {
-  currentSlide = (currentSlide + dir + totalSlides) % totalSlides;
-  updateSlides();
-}
-
-function goToSlide(i) {
-  currentSlide = i;
-  updateSlides();
-}
-
-// Auto-advance
-setInterval(() => moveSlide(1), 5000);
-
-// Touch support
-let touchStartX = 0;
-track.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
-track.addEventListener('touchend', e => {
-  const diff = touchStartX - e.changedTouches[0].clientX;
-  if (Math.abs(diff) > 50) moveSlide(diff > 0 ? 1 : -1);
-});
-
-// ── SCROLL REVEAL ──
-const observer = new IntersectionObserver(entries => {
-  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-}, { threshold: 0.1 });
-document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-// ── MODALS ──
-function openModal(type) {
-  document.getElementById(type + 'Modal').classList.add('open');
-  event.preventDefault();
-}
-function closeModal(type) {
-  document.getElementById(type + 'Modal').classList.remove('open');
-}
-document.querySelectorAll('.modal-overlay').forEach(m => {
-  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
-});
-
-// ── AUTH REDIRECT ──
-function showAuth() {
-  event.preventDefault();
-  // Oculta el landing y muestra el auth layer de la app
-  document.getElementById('landingPage').style.display = 'none';
-  document.getElementById('authLayer').classList.remove('hide');
-}
-</script>
 </div>
 
 <!-- ══════════ AUTH ══════════ -->
@@ -749,7 +728,7 @@ function showAuth() {
   <div class="auth-bg"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
 
   <div class="auth-card" id="loginCard">
-    <div class="auth-brand"><div class="auth-icon">A</div><div class="auth-name">Ahorrapp <span>Pro</span></div></div>
+    <div class="auth-brand"><div class="auth-icon">A</div><div class="auth-name">Ahorrapp <em>Pro</em></div></div>
     <div class="auth-h1">Bienvenido de vuelta</div>
     <div class="auth-sub">Tu asesor financiero IA te espera.</div>
     <div class="auth-err" id="loginErr"></div>
@@ -765,7 +744,7 @@ function showAuth() {
   </div>
 
   <div class="auth-card" id="regCard" style="display:none">
-    <div class="auth-brand"><div class="auth-icon">A</div><div class="auth-name">Ahorrapp <span>Pro</span></div></div>
+    <div class="auth-brand"><div class="auth-icon">A</div><div class="auth-name">Ahorrapp <em>Pro</em></div></div>
     <div class="auth-h1">Crear cuenta</div>
     <div class="auth-sub">En 2 minutos tendrás tu plan financiero personalizado con IA.</div>
     <div class="auth-err" id="regErr"></div>
@@ -806,7 +785,7 @@ function showAuth() {
   <header class="header">
     <div class="h-brand">
       <div class="h-logo">A</div>
-      <div class="h-title">Ahorrapp <span>Pro</span></div>
+      <div class="h-title">Ahorrapp <em>Pro</em></div>
     </div>
     <div class="h-right">
       <div class="ai-badge"><div class="ai-dot"></div>IA Activa</div>
@@ -820,14 +799,14 @@ function showAuth() {
   <main class="main" id="mainContent"></main>
 </div>
 
-<!-- MODALS -->
+<!-- MODALS APP -->
 <div class="modal-overlay" id="modalMeta">
   <div class="modal">
     <div class="modal-title" id="mmTitle">Nueva meta</div>
     <div class="form-group" style="margin-bottom:12px"><label class="form-label">Nombre</label><input type="text" id="metaNombre" placeholder="Ej: Apartamento"></div>
     <div class="form-grid" style="margin-bottom:12px">
       <div class="form-group"><label class="form-label">Monto objetivo</label><input type="number" id="metaTotal"></div>
-      <div class="form-group"><label class="form-label">Color</label><input type="color" id="metaColor" value="#4f8eff"></div>
+      <div class="form-group"><label class="form-label">Color</label><input type="color" id="metaColor" value="#22c55e"></div>
     </div>
     <div class="form-grid" style="margin-bottom:12px">
       <div class="form-group"><label class="form-label">Cuota semanal</label><input type="number" id="metaCuotaSemanal"></div>
@@ -843,7 +822,7 @@ function showAuth() {
 
 <div class="modal-overlay" id="modalAbonar">
   <div class="modal">
-    <div class="modal-title">Abonar a: <span id="abonarNom" style="color:var(--blue)"></span></div>
+    <div class="modal-title">Abonar a: <span id="abonarNom" style="color:var(--green)"></span></div>
     <div id="abonarInfo" style="margin-bottom:14px;font-size:13px;color:var(--text2)"></div>
     <div class="form-group" style="margin-bottom:18px"><label class="form-label">Monto</label><input type="number" id="abonarMonto"></div>
     <div class="btn-row">
@@ -857,7 +836,7 @@ function showAuth() {
   <div class="modal" style="max-width:320px">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
       <div class="u-av" style="width:44px;height:44px;font-size:18px" id="umAv">?</div>
-      <div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700" id="umName">...</div><div style="font-size:12px;color:var(--text2)" id="umEmail">...</div></div>
+      <div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800" id="umName">...</div><div style="font-size:12px;color:var(--text2)" id="umEmail">...</div></div>
     </div>
     <button class="btn btn-ghost" style="width:100%;margin-bottom:8px" onclick="rerunOnboarding()">🤖 Re-configurar con IA</button>
     <button class="btn btn-ghost" style="width:100%;margin-bottom:8px" onclick="exportJSON()">⬇ Backup JSON</button>
@@ -868,10 +847,9 @@ function showAuth() {
 
 <div class="toast" id="toast"></div>
 
-<!-- Firebase -->
+<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- Firebase SDK + Data Layer — inline para garantizar scope global -->
 <script type="module">
 import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
@@ -891,49 +869,24 @@ const FIREBASE_CONFIG = {
   appId:             "1:484687357317:web:114189a184d6f3131710ec"
 };
 
-const DEMO_MODE = false;
-window._DEMO_MODE = DEMO_MODE;
-
-let auth, db;
 const app = initializeApp(FIREBASE_CONFIG);
-auth = getAuth(app);
-db   = getFirestore(app);
-
-// ── DATA LAYER ──
-function key(uid, k) { return `ap_${uid}_${k}`; }
+const auth = getAuth(app);
+const db   = getFirestore(app);
 
 window._db = {
-  async saveProfile(uid, data) {
-    try { await setDoc(doc(db,'users',uid,'data','profile'), data); } catch(e) { console.error('saveProfile',e); }
-  },
-  async getProfile(uid) {
-    try { const s=await getDoc(doc(db,'users',uid,'data','profile')); return s.exists()?s.data():null; } catch(e) { return null; }
-  },
-  async saveGastos(uid, list) {
-    try { await setDoc(doc(db,'users',uid,'data','gastos'), { list }); } catch(e) { console.error('saveGastos',e); }
-  },
-  async getGastos(uid) {
-    try { const s=await getDoc(doc(db,'users',uid,'data','gastos')); return s.exists()?(s.data().list||[]):[] ; } catch(e) { return []; }
-  },
-  async saveMetas(uid, list) {
-    try { await setDoc(doc(db,'users',uid,'data','metas'), { list }); } catch(e) { console.error('saveMetas',e); }
-  },
-  async getMetas(uid) {
-    try { const s=await getDoc(doc(db,'users',uid,'data','metas')); return s.exists()?(s.data().list||[]):[] ; } catch(e) { return []; }
-  },
-  async saveConfig(uid, data) {
-    try { await setDoc(doc(db,'users',uid,'data','config'), data); } catch(e) { console.error('saveConfig',e); }
-  },
-  async getConfig(uid) {
-    try { const s=await getDoc(doc(db,'users',uid,'data','config')); return s.exists()?s.data():null; } catch(e) { return null; }
-  },
+  async saveProfile(uid, data) { try { await setDoc(doc(db,'users',uid,'data','profile'), data); } catch(e) { console.error('saveProfile',e); } },
+  async getProfile(uid) { try { const s=await getDoc(doc(db,'users',uid,'data','profile')); return s.exists()?s.data():null; } catch(e) { return null; } },
+  async saveGastos(uid, list) { try { await setDoc(doc(db,'users',uid,'data','gastos'), { list }); } catch(e) { console.error('saveGastos',e); } },
+  async getGastos(uid) { try { const s=await getDoc(doc(db,'users',uid,'data','gastos')); return s.exists()?(s.data().list||[]):[] ; } catch(e) { return []; } },
+  async saveMetas(uid, list) { try { await setDoc(doc(db,'users',uid,'data','metas'), { list }); } catch(e) { console.error('saveMetas',e); } },
+  async getMetas(uid) { try { const s=await getDoc(doc(db,'users',uid,'data','metas')); return s.exists()?(s.data().list||[]):[] ; } catch(e) { return []; } },
+  async saveConfig(uid, data) { try { await setDoc(doc(db,'users',uid,'data','config'), data); } catch(e) { console.error('saveConfig',e); } },
+  async getConfig(uid) { try { const s=await getDoc(doc(db,'users',uid,'data','config')); return s.exists()?s.data():null; } catch(e) { return null; } },
 };
 
-// ── SPACES DATA LAYER ──
 window._dbSpaces = { db, collection, addDoc, getDocs, onSnapshot, query, orderBy,
   limit, serverTimestamp, deleteDoc, updateDoc, setDoc, getDoc, doc };
 
-// ── AUTH ──
 window.doLogin = async () => {
   const email=document.getElementById('loginEmail').value.trim();
   const pass=document.getElementById('loginPass').value;
@@ -977,12 +930,104 @@ window.doLogout = async () => {
   location.reload();
 };
 
-// ── AUTH STATE — detecta si ya estaba logueado ──
 onAuthStateChanged(auth, user => {
   if (user && !window.CURRENT_USER) {
     window._onUserReady({uid:user.uid,email:user.email,displayName:user.displayName});
   }
 });
+</script>
+
+<script>
+// ── LANDING LOGIC ──
+function showAuth() {
+  document.getElementById('landingPage').style.display = 'none';
+  document.getElementById('authLayer').classList.remove('hide');
+}
+
+// Orbe Three.js
+(function initOrb() {
+  const canvas = document.getElementById('l-orb-canvas');
+  if (!canvas || !window.THREE) return;
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, canvas.offsetWidth / canvas.offsetHeight, 0.1, 100);
+  camera.position.set(0, 0, 4.5);
+
+  const gCore = new THREE.SphereGeometry(1, 64, 64);
+  const mCore = new THREE.MeshPhongMaterial({ color: 0x051209, emissive: 0x16a34a, emissiveIntensity: 0.2, transparent: true, opacity: 0.9 });
+  const core  = new THREE.Mesh(gCore, mCore); scene.add(core);
+
+  const gWire = new THREE.SphereGeometry(1.02, 22, 22);
+  const mWire = new THREE.MeshBasicMaterial({ color: 0x22c55e, wireframe: true, transparent: true, opacity: 0.07 });
+  scene.add(new THREE.Mesh(gWire, mWire));
+
+  const gR1 = new THREE.TorusGeometry(1.4, 0.003, 8, 120);
+  const r1  = new THREE.Mesh(gR1, new THREE.MeshBasicMaterial({ color: 0x22c55e, transparent: true, opacity: 0.45 }));
+  r1.rotation.x = Math.PI / 2.5; scene.add(r1);
+
+  const gR2 = new THREE.TorusGeometry(1.75, 0.002, 8, 120);
+  const r2  = new THREE.Mesh(gR2, new THREE.MeshBasicMaterial({ color: 0x4ade80, transparent: true, opacity: 0.2 }));
+  r2.rotation.x = Math.PI / 3.2; r2.rotation.y = Math.PI / 5; scene.add(r2);
+
+  const pc = 280, pos = new Float32Array(pc * 3);
+  for (let i = 0; i < pc; i++) {
+    const t = Math.random() * Math.PI * 2, p = Math.acos(2 * Math.random() - 1), r = 1.15 + Math.random() * 1.1;
+    pos[i*3] = r*Math.sin(p)*Math.cos(t); pos[i*3+1] = r*Math.sin(p)*Math.sin(t); pos[i*3+2] = r*Math.cos(p);
+  }
+  const gP = new THREE.BufferGeometry(); gP.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  scene.add(new THREE.Points(gP, new THREE.PointsMaterial({ color: 0x4ade80, size: 0.018, transparent: true, opacity: 0.55 })));
+
+  scene.add(new THREE.AmbientLight(0x051209, 1));
+  const l1 = new THREE.PointLight(0x16a34a, 3, 8); l1.position.set(2, 2, 2); scene.add(l1);
+  const l2 = new THREE.PointLight(0x4ade80, 1.5, 8); l2.position.set(-2, -1, 1); scene.add(l2);
+
+  let mx = 0, my = 0;
+  document.addEventListener('mousemove', e => { mx = (e.clientX/window.innerWidth - .5) * .5; my = (e.clientY/window.innerHeight - .5) * .35; });
+
+  (function animate() {
+    requestAnimationFrame(animate);
+    const t = Date.now() * .001;
+    core.rotation.y += .003; core.rotation.x += .001;
+    r1.rotation.z += .004; r2.rotation.z -= .003; r2.rotation.y += .001;
+    core.position.y = Math.sin(t * .5) * .07;
+    scene.rotation.y += (mx - scene.rotation.y) * .04;
+    scene.rotation.x += (my - scene.rotation.x) * .04;
+    mCore.emissiveIntensity = .15 + Math.sin(t * 1.5) * .06;
+    renderer.render(scene, camera);
+  })();
+
+  window.addEventListener('resize', () => {
+    const w = canvas.offsetWidth, h = canvas.offsetHeight;
+    renderer.setSize(w, h); camera.aspect = w/h; camera.updateProjectionMatrix();
+  });
+})();
+
+// Slides
+let lCurSlide = 0;
+const lTotal  = 5;
+function lUpdateSlides() {
+  const track = document.getElementById('lSlidesTrack');
+  const cards = track.querySelectorAll('.l-slide');
+  const w = cards[0].offsetWidth + 20;
+  track.style.transform = `translateX(-${lCurSlide * w}px)`;
+  cards.forEach((c,i) => c.classList.toggle('active', i === lCurSlide));
+  document.querySelectorAll('.l-dot').forEach((d,i) => d.classList.toggle('active', i === lCurSlide));
+}
+function lMoveSlide(d) { lCurSlide = (lCurSlide + d + lTotal) % lTotal; lUpdateSlides(); }
+function lGoTo(i) { lCurSlide = i; lUpdateSlides(); }
+setInterval(() => lMoveSlide(1), 5500);
+
+// Touch slides
+let lTouchX = 0;
+document.getElementById('lSlidesTrack')?.addEventListener('touchstart', e => lTouchX = e.touches[0].clientX);
+document.getElementById('lSlidesTrack')?.addEventListener('touchend', e => { const d = lTouchX - e.changedTouches[0].clientX; if(Math.abs(d)>50) lMoveSlide(d>0?1:-1); });
+
+// Modals landing
+function lOpenModal(type) { document.getElementById('l'+type.charAt(0).toUpperCase()+type.slice(1)+'Modal').classList.add('open'); if(event)event.preventDefault(); }
+function lCloseModal(type) { document.getElementById('l'+type.charAt(0).toUpperCase()+type.slice(1)+'Modal').classList.remove('open'); }
+document.querySelectorAll('.l-modal-overlay').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); }));
 </script>
 
 <script src="app.js"></script>
