@@ -671,7 +671,7 @@
         </div>
         <div class="l-fc">
           <h4>Soporte</h4>
-          <a href="mailto:soporte@ahorrapp.pro">Contacto</a>
+          <a href="/cdn-cgi/l/email-protection#176478677865637257767f78656576676739676578">Contacto</a>
         </div>
       </div>
     </div>
@@ -700,7 +700,7 @@
       <h3>6. Datos y privacidad</h3><p>Tus datos se almacenan en Firebase (Google Cloud) con cifrado. No vendemos tu información personal. Ver Política de Privacidad.</p>
       <h3>7. Propiedad intelectual</h3><p>Ahorrapp Pro y todo su contenido son propiedad exclusiva del desarrollador. No puedes copiar, modificar ni distribuir sin autorización escrita.</p>
       <h3>8. Jurisdicción</h3><p>Estos términos se rigen por las leyes de la República de Colombia. Disputas se resolverán en los tribunales de Bogotá.</p>
-      <h3>9. Contacto</h3><p>soporte@ahorrapp.pro</p>
+      <h3>9. Contacto</h3><p><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d1a2bea1bea3a5b491b0b9bea3a3b0a1a1ffa1a3be">[email&#160;protected]</a></p>
     </div>
   </div>
 </div>
@@ -718,7 +718,7 @@
       <h3>4. Compartir información</h3><p>No vendemos ni compartimos tu información con fines comerciales. Solo con: Google Firebase (almacenamiento), Anthropic/OpenAI (IA, sin almacenamiento permanente) y Vercel (hosting).</p>
       <h3>5. Tus derechos</h3><p>Puedes acceder, corregir, eliminar tus datos y exportarlos en JSON/CSV en cualquier momento desde la app.</p>
       <h3>6. Ley aplicable</h3><p>Ley 1581 de 2012 (Protección de Datos Personales de Colombia) y sus decretos reglamentarios.</p>
-      <h3>7. Contacto</h3><p>soporte@ahorrapp.pro</p>
+      <h3>7. Contacto</h3><p><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e4978b948b969081a4858c8b9696859494ca94968b">[email&#160;protected]</a></p>
     </div>
   </div>
 </div>
@@ -848,7 +848,7 @@
 <div class="toast" id="toast"></div>
 
 <!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script type="module">
 import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -872,6 +872,10 @@ const FIREBASE_CONFIG = {
 const app = initializeApp(FIREBASE_CONFIG);
 const auth = getAuth(app);
 const db   = getFirestore(app);
+
+// ── IMPORTANTE: false = usa Firebase real, true = localStorage demo ──
+const DEMO_MODE = false;
+window._DEMO_MODE = DEMO_MODE;
 
 window._db = {
   async saveProfile(uid, data) { try { await setDoc(doc(db,'users',uid,'data','profile'), data); } catch(e) { console.error('saveProfile',e); } },
@@ -1026,12 +1030,4 @@ document.getElementById('lSlidesTrack')?.addEventListener('touchend', e => { con
 
 // Modals landing
 function lOpenModal(type) { document.getElementById('l'+type.charAt(0).toUpperCase()+type.slice(1)+'Modal').classList.add('open'); if(event)event.preventDefault(); }
-function lCloseModal(type) { document.getElementById('l'+type.charAt(0).toUpperCase()+type.slice(1)+'Modal').classList.remove('open'); }
-document.querySelectorAll('.l-modal-overlay').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); }));
-</script>
-
-<script src="app.js"></script>
-<script type="module" src="spaces.js"></script>
-<script type="module" src="spaces-ui.js"></script>
-</body>
-</html>
+function lCloseModal(type) { document.get
