@@ -908,6 +908,17 @@ window._db = {
 window._dbSpaces = { db, collection, addDoc, getDocs, onSnapshot, query, orderBy,
   limit, serverTimestamp, deleteDoc, updateDoc, setDoc, getDoc, doc };
 
+// Helper: espera a que app.js defina _onUserReady
+async function waitForApp() {
+  let retries = 20;
+  while (typeof window._onUserReady !== 'function' && retries-- > 0) {
+    await new Promise(r => setTimeout(r, 150));
+  }
+  if (typeof window._onUserReady !== 'function') {
+    throw new Error('La app no cargó. Por favor recarga la página.');
+  }
+}
+
 window.doLogin = async () => {
   const email=document.getElementById('loginEmail').value.trim();
   const pass=document.getElementById('loginPass').value;
@@ -916,6 +927,7 @@ window.doLogin = async () => {
   if(!email||!pass){err.textContent='Completa todos los campos';err.style.display='block';return;}
   try {
     const c=await signInWithEmailAndPassword(auth,email,pass);
+    await waitForApp();
     window._onUserReady({uid:c.user.uid,email:c.user.email,displayName:c.user.displayName});
   } catch(e) { err.textContent='Email o contraseña incorrectos'; err.style.display='block'; }
 };
@@ -931,6 +943,7 @@ window.doRegister = async () => {
   try {
     const c=await createUserWithEmailAndPassword(auth,email,pass);
     await updateProfile(c.user,{displayName:nombre});
+    await waitForApp();
     window._onUserReady({uid:c.user.uid,email,displayName:nombre,isNew:true});
   } catch(e) {
     err.textContent=e.code==='auth/email-already-in-use'?'Email ya registrado':'Error: '+e.message;
@@ -941,6 +954,7 @@ window.doRegister = async () => {
 window.doGoogleLogin = async () => {
   try {
     const c=await signInWithPopup(auth,new GoogleAuthProvider());
+    await waitForApp();
     window._onUserReady({uid:c.user.uid,email:c.user.email,displayName:c.user.displayName,isNew:false});
   } catch(e) { console.warn('Google login:',e); }
 };
