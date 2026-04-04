@@ -16,8 +16,20 @@ import { initializeApp, getApps }
 function getDB() {
   if (window._DEMO_MODE) return null;
   const apps = getApps();
-  if (!apps.length) return null;
+  if (!apps.length) {
+    console.warn('Firebase no inicializado aún');
+    return null;
+  }
   return getFirestore(apps[0]);
+}
+
+async function getDBReady(retries = 10) {
+  for (let i = 0; i < retries; i++) {
+    const db = getDB();
+    if (db) return db;
+    await new Promise(r => setTimeout(r, 200));
+  }
+  throw new Error('Firebase no disponible después de esperar');
 }
 
 // ══════════════════════════════════════════
@@ -67,7 +79,7 @@ window.createSpace = async function(name, emoji = '💰') {
     demoSaveList('ap_my_spaces_' + uid(), spaces);
     localStorage.setItem('ap_space_' + id, JSON.stringify(space));
   } else {
-    const db = getDB();
+    const db = await getDBReady();
     await setDoc(doc(db, 'spaces', id), space);
     // Add to user's space list
     const userRef = doc(db, 'users', uid(), 'data', 'spaces');
@@ -85,7 +97,7 @@ window.loadMySpaces = async function() {
   if (window._DEMO_MODE) {
     return demoGetList('ap_my_spaces_' + uid());
   }
-  const db = getDB();
+  const db = await getDBReady();
   const snap = await getDoc(doc(db, 'users', uid(), 'data', 'spaces'));
   return snap.exists() ? (snap.data().list || []) : [];
 };
@@ -97,7 +109,7 @@ window.loadSpace = async function(spaceId) {
     const raw = localStorage.getItem('ap_space_' + spaceId);
     spaceData = raw ? JSON.parse(raw) : null;
   } else {
-    const db = getDB();
+    const db = await getDBReady();
     const snap = await getDoc(doc(db, 'spaces', spaceId));
     spaceData = snap.exists() ? snap.data() : null;
   }
@@ -301,7 +313,7 @@ function renderChat(msgs) {
 
     div.style.cssText = `display:flex;gap:8px;margin-bottom:10px;${isMe?'flex-direction:row-reverse':''}`;
     div.innerHTML = `
-      <div style="width:28px;height:28px;border-radius:50%;background:${isMe?'linear-gradient(135deg,var(--blue),var(--purple))':'linear-gradient(135deg,var(--green),#0a8a6a)'};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">${m.authorAvatar||'?'}</div>
+      <div style="width:28px;height:28px;border-radius:50%;background:${isMe?'var(--green)':'var(--s3)'};color:${isMe?'#051209':'var(--text)'};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">${m.authorAvatar||'?'}</div>
       <div style="max-width:75%">
         <div style="font-size:10px;color:var(--text3);margin-bottom:3px;${isMe?'text-align:right':''}">${isMe?'Tú':m.authorName}</div>
         <div style="background:${isMe?'rgba(79,142,255,.15)':'var(--s2)'};border:1px solid ${isMe?'rgba(79,142,255,.25)':'var(--border)'};border-radius:${isMe?'12px 2px 12px 12px':'2px 12px 12px 12px'};padding:8px 12px;font-size:13px;line-height:1.5;color:var(--text)">${esc(m.text)}</div>
@@ -337,7 +349,7 @@ window.generateInviteLink = async function(role = 'member') {
   if (window._DEMO_MODE) {
     localStorage.setItem('ap_invite_' + token, JSON.stringify(invite));
   } else {
-    const db = getDB();
+    const db = await getDBReady();
     await setDoc(doc(db, 'invites', token), invite);
   }
 
@@ -351,7 +363,7 @@ window.acceptInvite = async function(token) {
     const raw = localStorage.getItem('ap_invite_' + token);
     invite = raw ? JSON.parse(raw) : null;
   } else {
-    const db = getDB();
+    const db = await getDBReady();
     const snap = await getDoc(doc(db, 'invites', token));
     invite = snap.exists() ? snap.data() : null;
   }
@@ -595,6 +607,9 @@ window.checkPendingInvite = async function() {
 // EXPOSE DEMO MODE FLAG
 // ══════════════════════════════════════════
 // Read from firebase.js
+// DEMO_MODE se toma del flag global seteado por firebase.js (false en producción)
 window.addEventListener('load', () => {
-  window._DEMO_MODE = typeof DEMO_MODE !== 'undefined' ? DEMO_MODE : true;
+  if (typeof window._DEMO_MODE === 'undefined') {
+    window._DEMO_MODE = false; // default: producción
+  }
 });

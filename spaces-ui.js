@@ -59,7 +59,7 @@ function getTeamTabHTML() {
     <div id="spaceHeaderTeam"></div>
 
     <div class="two-col" style="margin-bottom:16px">
-      <div class="stat-card sc-blue"><div class="stat-label">Miembros</div><div class="stat-value" id="teamMemberCount" style="color:var(--blue)">—</div></div>
+      <div class="stat-card sc-blue"><div class="stat-label">Miembros</div><div class="stat-value" id="teamMemberCount" style="color:var(--green)">—</div></div>
       <div class="stat-card sc-green"><div class="stat-label">Movimientos equipo</div><div class="stat-value" id="teamTxCount" style="color:var(--green)">—</div></div>
     </div>
 
@@ -97,7 +97,7 @@ function renderTeamTab() {
         const av = g.authorAvatar || author.charAt(0).toUpperCase();
         const color = g.tipo === 'ingreso' ? 'var(--green)' : 'var(--red)';
         return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-          <div style="width:28px;height:28px;border-radius:50%;background:${isMe?'linear-gradient(135deg,var(--blue),var(--purple))':'linear-gradient(135deg,var(--green),#0a8a6a)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">${av}</div>
+          <div style="width:28px;height:28px;border-radius:50%;background:${isMe?'var(--green)':'var(--s3)'};color:${isMe?'#051209':'var(--text)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">${av}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:12px;font-weight:500">${esc(g.descripcion)}</div>
             <div style="font-size:11px;color:var(--text2);font-family:'DM Mono',monospace">${g.fecha} · ${g.categoria} · <strong>${isMe?'Tú':author}</strong></div>
@@ -277,13 +277,10 @@ window.aiTeamAnalysis = async function(prompt) {
     const byMember = {};
     (window.gastos||[]).forEach(g=>{ const k=g.authorName||'?'; byMember[k]=(byMember[k]||0)+g.monto; });
 
-    const data = await fetch('/api/ai', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        max_tokens: 600,
-        messages:[{ role:'user', content:`Eres asesor financiero de un equipo/pareja en Colombia. Analiza estos datos y responde: "${prompt}"\n\nDATA:\nEspacio: ${SPACE.current?.name}\nMiembros: ${members}\nIngresos totales: ${fmt(ing)}\nEgresos totales: ${fmt(eg)}\nBalance: ${fmt(ing-eg)}\nGastos por categoría: ${JSON.stringify(cats)}\nAportes por miembro: ${JSON.stringify(byMember)}\n\nResponde en español, máximo 200 palabras, con emojis y recomendaciones concretas.` }]
-      })
-    }).then(r=>{ if(!r.ok) throw new Error('Error '+r.status); return r.json(); });
+    const data = await callAI({
+      max_tokens: 600,
+      messages:[{ role:'user', content:`Eres asesor financiero de un equipo/pareja en Colombia. Analiza estos datos y responde: "${prompt}"\n\nDATA:\nEspacio: ${SPACE.current?.name}\nMiembros: ${members}\nIngresos totales: ${fmt(ing)}\nEgresos totales: ${fmt(eg)}\nBalance: ${fmt(ing-eg)}\nGastos por categoría: ${JSON.stringify(cats)}\nAportes por miembro: ${JSON.stringify(byMember)}\n\nResponde en español, máximo 200 palabras, con emojis y recomendaciones concretas.` }]
+    });
     const text = data.content?.[0]?.text || 'No se pudo obtener el análisis.';
     el.innerHTML = `<div style="background:rgba(79,142,255,.07);border:1px solid rgba(79,142,255,.15);border-radius:10px;padding:14px;font-size:13px;line-height:1.65;color:var(--text)">${text.replace(/\n/g,'<br>')}</div>`;
   } catch(e) {
@@ -398,7 +395,7 @@ window.selectEmoji = function(e) {
   document.getElementById('selectedEmoji').value = e;
   document.querySelectorAll('.emoji-opt').forEach(b => { b.style.borderColor = 'var(--border)'; b.style.background = 'var(--s2)'; });
   event.target.style.borderColor = 'var(--blue)';
-  event.target.style.background  = 'var(--blue-glow)';
+  event.target.style.background  = 'var(--green-dim)';
 };
 window.doCreateSpace = async function() {
   const name  = document.getElementById('newSpaceName')?.value.trim();
@@ -416,16 +413,22 @@ window.refreshSpaceList = async function() {
   const spaces = await loadMySpaces();
   if (!spaces.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text3);text-align:center;padding:8px">Sin espacios aún</div>'; return; }
   el.innerHTML = spaces.map(s => `
-    <div onclick="loadSpaceFromMenu('${s.id}')" style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;background:${SPACE.current?.id===s.id?'var(--blue-glow)':'var(--s2)'};border:1px solid ${SPACE.current?.id===s.id?'rgba(79,142,255,.3)':'var(--border)'};margin-bottom:5px;transition:all .15s">
+    <div onclick="loadSpaceFromMenu('${s.id}')" style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;background:${SPACE.current?.id===s.id?'var(--green-dim)':'var(--s2)'};border:1px solid ${SPACE.current?.id===s.id?'rgba(34,197,94,.3)':'var(--border)'};margin-bottom:5px;transition:all .15s">
       <span style="font-size:16px">${s.emoji||'💰'}</span>
       <div style="flex:1"><div style="font-size:13px;font-weight:500">${esc(s.name)}</div><div style="font-size:11px;color:var(--text3)">${s.role}</div></div>
-      ${SPACE.current?.id===s.id?'<span style="font-size:10px;color:var(--blue)">activo</span>':''}
+      ${SPACE.current?.id===s.id?'<span style="font-size:10px;color:var(--green)">activo</span>':''}
     </div>`).join('');
 };
 
 window.loadSpaceFromMenu = async function(id) {
   closeUserMenu?.();
-  await loadSpace(id);
+  try {
+    const ok = await loadSpace(id);
+    if (!ok) showToast('No se pudo cargar el espacio. Intenta de nuevo.', 'red');
+  } catch(e) {
+    console.error('loadSpace error:', e);
+    showToast('Error al cargar el espacio: ' + e.message, 'red');
+  }
 };
 
 // Load spaces when user menu opens
@@ -439,6 +442,9 @@ window.openUserMenu = function() {
 const _origOnUserReady = window._onUserReady;
 window._onUserReady = async function(user) {
   await _origOnUserReady?.(user);
-  await checkPendingInvite?.();
-  await checkInviteParam?.();
+  // Esperar a que la app esté lista antes de procesar invites
+  setTimeout(async () => {
+    await checkPendingInvite?.();
+    await checkInviteParam?.();
+  }, 500);
 };
