@@ -538,6 +538,23 @@
     @media(max-width:640px){.two-col{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr 1fr}.nav-tab{padding:12px 10px;font-size:12px}}
     @media(max-width:380px){.stats-grid{grid-template-columns:1fr}}
   </style>
+<script>
+  // Funciones globales del landing — deben estar disponibles antes del HTML
+  function showAuth() {
+    document.getElementById('landingPage').style.display = 'none';
+    document.getElementById('authLayer').classList.remove('hide');
+  }
+  function lOpenModal(type) {
+    var id = 'l' + type.charAt(0).toUpperCase() + type.slice(1) + 'Modal';
+    var el = document.getElementById(id);
+    if (el) el.classList.add('open');
+  }
+  function lCloseModal(type) {
+    var id = 'l' + type.charAt(0).toUpperCase() + type.slice(1) + 'Modal';
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('open');
+  }
+</script>
 </head>
 <body>
 
@@ -942,11 +959,7 @@ onAuthStateChanged(auth, user => {
 </script>
 
 <script>
-// ── LANDING LOGIC ──
-function showAuth() {
-  document.getElementById('landingPage').style.display = 'none';
-  document.getElementById('authLayer').classList.remove('hide');
-}
+// ── LANDING LOGIC ── (showAuth definida en <head>)
 
 // Orbe Three.js
 (function initOrb() {
