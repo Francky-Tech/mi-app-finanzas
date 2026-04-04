@@ -254,11 +254,498 @@
     @media(max-width:640px){.two-col{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr 1fr}.nav-tab{padding:12px 10px;font-size:12px}}
     @media(max-width:380px){.stats-grid{grid-template-columns:1fr}}
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
+<!-- ══════════ LANDING ══════════ -->
+<div id="landingPage">
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- NAVBAR -->
+<nav>
+  <div class="nav-logo">Ahorrapp<span> Pro</span></div>
+  <a href="#auth" class="nav-btn" onclick="showAuth()">Ingresar</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-grid"></div>
+  <div class="scanline"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+
+  <canvas id="orb-canvas"></canvas>
+
+  <div class="hero-content">
+    <p class="hero-tag">// Finanzas personales · IA · Colombia</p>
+    <h1 class="hero-title">
+      Tu dinero,<br>
+      <span class="accent">inteligente.</span><br>
+      <span class="accent2">Finalmente.</span>
+    </h1>
+    <p class="hero-sub">
+      Asesor financiero con IA que conoce tu situación real. Dashboard personalizado, metas de ahorro, control de deudas y espacios compartidos para parejas y equipos.
+    </p>
+    <div class="hero-cta">
+      <a href="#" class="btn-primary" onclick="showAuth()">⚡ Start Now</a>
+      <a href="#slides-section" class="btn-ghost">Ver cómo funciona →</a>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-num">IA</div>
+        <div class="hero-stat-label">Asesor 24/7</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">100%</div>
+        <div class="hero-stat-label">Personalizado</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- SLIDES SECTION -->
+<section id="slides-section">
+  <div class="section-header reveal">
+    <p class="section-tag">// Funcionalidades</p>
+    <h2 class="section-title">Todo lo que necesitas<br>para tomar control</h2>
+  </div>
+
+  <div class="slides-wrapper">
+    <div class="slides-track" id="slidesTrack">
+
+      <div class="slide-card active">
+        <p class="slide-num">01 / 05</p>
+        <span class="slide-icon">🤖</span>
+        <h3 class="slide-title">Asesor <span class="hl">IA</span> que te conoce</h3>
+        <p class="slide-desc">No es un chatbot genérico. Tu asesor tiene acceso a todos tus datos financieros reales — ingresos, gastos fijos, deudas y metas — y te da consejos concretos con números exactos en colombiano.</p>
+        <div class="slide-feature">Powered by Claude Sonnet · Respuestas en segundos · Contexto financiero completo</div>
+      </div>
+
+      <div class="slide-card">
+        <p class="slide-num">02 / 05</p>
+        <span class="slide-icon">📊</span>
+        <h3 class="slide-title">Dashboard <span class="hl">inteligente</span></h3>
+        <p class="slide-desc">Onboarding conversacional de 5 preguntas y la IA configura tu app automáticamente. Solo ves los módulos que necesitas. Alertas proactivas cuando algo en tus finanzas merece atención.</p>
+        <div class="slide-feature">Tabs dinámicos · Alertas en tiempo real · Configuración automática por IA</div>
+      </div>
+
+      <div class="slide-card">
+        <p class="slide-num">03 / 05</p>
+        <span class="slide-icon">🏠</span>
+        <h3 class="slide-title">Tu meta de <span class="hl">apartamento</span></h3>
+        <p class="slide-desc">Plan de amortización mes a mes hacia tu meta de vivienda. Calcula cuánto necesitas ahorrar, cuándo puedes lograrlo con tus cesantías, y qué pasa con tu deuda de TC en el camino.</p>
+        <div class="slide-feature">Amortización TC · Proyección de cesantías · Timeline personalizado</div>
+      </div>
+
+      <div class="slide-card">
+        <p class="slide-num">04 / 05</p>
+        <span class="slide-icon">👥</span>
+        <h3 class="slide-title">Espacios <span class="hl">compartidos</span></h3>
+        <p class="slide-desc">Finanzas en pareja o en equipo, sin caos. Crea un espacio compartido, invita con un link, define roles (owner, admin, miembro, viewer) y tomen decisiones financieras juntos con reportes consolidados.</p>
+        <div class="slide-feature">Chat en tiempo real · Reportes del equipo · Roles y permisos</div>
+      </div>
+
+      <div class="slide-card">
+        <p class="slide-num">05 / 05</p>
+        <span class="slide-icon">🎯</span>
+        <h3 class="slide-title">Metas y <span class="hl">control total</span></h3>
+        <p class="slide-desc">Crea metas de ahorro, abona cuando puedas y sigue tu progreso. Registra movimientos con categorías inteligentes, filtra por fecha y exporta todo en JSON o CSV cuando quieras.</p>
+        <div class="slide-feature">Metas de ahorro · Reportes con gráficas · Backup exportable</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="slides-controls reveal">
+    <button class="slide-btn" id="prevBtn" onclick="moveSlide(-1)">←</button>
+    <div class="slide-dots" id="slideDots">
+      <div class="dot active" onclick="goToSlide(0)"></div>
+      <div class="dot" onclick="goToSlide(1)"></div>
+      <div class="dot" onclick="goToSlide(2)"></div>
+      <div class="dot" onclick="goToSlide(3)"></div>
+      <div class="dot" onclick="goToSlide(4)"></div>
+    </div>
+    <button class="slide-btn" id="nextBtn" onclick="moveSlide(1)">→</button>
+  </div>
+</section>
+
+<!-- CTA SECTION -->
+<section id="cta-section">
+  <div class="cta-glow"></div>
+  <h2 class="cta-title reveal">
+    Empieza gratis.<br>
+    <span class="line2">Hoy mismo.</span>
+  </h2>
+  <p class="cta-sub reveal">5 minutos de onboarding y tu asesor IA ya sabe más de tus finanzas que cualquier app genérica.</p>
+  <a href="#" class="cta-btn reveal" onclick="showAuth()">⚡ Start Now — Es gratis</a>
+  <p class="cta-note reveal">Sin tarjeta de crédito · Sin período de prueba · Sin letra pequeña</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="logo">Ahorrapp Pro</div>
+      <p class="tagline">Finanzas personales con IA para colombianos que quieren tomar el control de su plata.</p>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <h4>Producto</h4>
+        <a href="#slides-section">Funcionalidades</a>
+        <a href="#" onclick="showAuth()">Registrarse</a>
+        <a href="#" onclick="showAuth()">Iniciar sesión</a>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <a href="#" onclick="openModal('terms')">Términos de servicio</a>
+        <a href="#" onclick="openModal('privacy')">Política de privacidad</a>
+      </div>
+      <div class="footer-col">
+        <h4>Soporte</h4>
+        <a href="mailto:soporte@ahorrapp.pro">Contacto</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p class="footer-copy">© 2026 Ahorrapp Pro. Hecho con ☕ en Colombia.</p>
+    <div class="footer-legal">
+      <a href="#" onclick="openModal('terms')">Términos de servicio</a>
+      <a href="#" onclick="openModal('privacy')">Política de privacidad</a>
+    </div>
+  </div>
+</footer>
+
+<!-- MODAL TÉRMINOS -->
+<div class="modal-overlay" id="termsModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('terms')">✕</button>
+    <h2 class="modal-title">Términos de Servicio</h2>
+    <p class="modal-date">Última actualización: Abril 2026</p>
+    <div class="modal-content">
+      <h3>1. Aceptación</h3>
+      <p>Al acceder y usar Ahorrapp Pro, aceptas estos Términos de Servicio. Si no estás de acuerdo con alguna parte, no puedes usar la aplicación.</p>
+
+      <h3>2. Descripción del servicio</h3>
+      <p>Ahorrapp Pro es una aplicación de finanzas personales con inteligencia artificial diseñada para usuarios en Colombia. Ofrece seguimiento de ingresos y gastos, metas de ahorro, análisis de deudas y asesoría financiera automatizada.</p>
+
+      <h3>3. Uso aceptable</h3>
+      <p>Te comprometes a:</p>
+      <ul>
+        <li>Proporcionar información financiera veraz para obtener consejos precisos</li>
+        <li>No usar la aplicación para actividades ilegales</li>
+        <li>Mantener la confidencialidad de tu cuenta</li>
+        <li>No intentar acceder a datos de otros usuarios</li>
+      </ul>
+
+      <h3>4. Información financiera y descargo</h3>
+      <p>Ahorrapp Pro proporciona herramientas de análisis y asesoría de carácter informativo. Los consejos generados por IA <strong>no constituyen asesoría financiera profesional certificada</strong>. Para decisiones financieras importantes, consulta un asesor financiero certificado.</p>
+
+      <h3>5. Cuentas de usuario</h3>
+      <p>Eres responsable de mantener la seguridad de tu cuenta y contraseña. Notifícanos inmediatamente si sospechas de acceso no autorizado. No nos hacemos responsables por pérdidas derivadas del uso no autorizado de tu cuenta.</p>
+
+      <h3>6. Datos y privacidad</h3>
+      <p>Tus datos financieros se almacenan en Firebase (Google Cloud) con cifrado en tránsito y en reposo. No vendemos tu información personal a terceros. Consulta nuestra Política de Privacidad para más detalles.</p>
+
+      <h3>7. Disponibilidad del servicio</h3>
+      <p>Ofrecemos el servicio "tal como está" y no garantizamos disponibilidad ininterrumpida. Podemos modificar o interrumpir el servicio con aviso previo razonable.</p>
+
+      <h3>8. Propiedad intelectual</h3>
+      <p>Ahorrapp Pro y todo su contenido, características y funcionalidad son propiedad exclusiva del desarrollador. No puedes copiar, modificar o distribuir ninguna parte sin autorización escrita.</p>
+
+      <h3>9. Modificaciones</h3>
+      <p>Podemos actualizar estos términos ocasionalmente. Te notificaremos de cambios materiales. El uso continuado después de la notificación implica aceptación.</p>
+
+      <h3>10. Jurisdicción</h3>
+      <p>Estos términos se rigen por las leyes de la República de Colombia. Cualquier disputa se resolverá en los tribunales competentes de Bogotá, Colombia.</p>
+
+      <h3>11. Contacto</h3>
+      <p>Para preguntas sobre estos términos: soporte@ahorrapp.pro</p>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PRIVACIDAD -->
+<div class="modal-overlay" id="privacyModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('privacy')">✕</button>
+    <h2 class="modal-title">Política de Privacidad</h2>
+    <p class="modal-date">Última actualización: Abril 2026</p>
+    <div class="modal-content">
+      <h3>1. Información que recopilamos</h3>
+      <p>Recopilamos la información que tú mismo proporcionas:</p>
+      <ul>
+        <li>Información de cuenta: nombre, email (vía Google o registro directo)</li>
+        <li>Datos financieros: ingresos, gastos, metas, deudas que ingresas manualmente</li>
+        <li>Datos de uso: cómo interactúas con la app para mejorar la experiencia</li>
+      </ul>
+
+      <h3>2. Cómo usamos tu información</h3>
+      <p>Usamos tus datos exclusivamente para:</p>
+      <ul>
+        <li>Proporcionar el servicio de seguimiento financiero personalizado</li>
+        <li>Generar consejos y análisis con IA basados en tu situación real</li>
+        <li>Mejorar la aplicación y corregir errores</li>
+        <li>Comunicarnos contigo sobre cambios importantes en el servicio</li>
+      </ul>
+
+      <h3>3. Almacenamiento y seguridad</h3>
+      <p>Tus datos se almacenan en Firebase Firestore (Google Cloud Platform) con:</p>
+      <ul>
+        <li>Cifrado en tránsito (HTTPS/TLS)</li>
+        <li>Cifrado en reposo</li>
+        <li>Reglas de seguridad que garantizan que solo tú puedes acceder a tus datos</li>
+        <li>Servidores ubicados en centros de datos de Google (us-central1)</li>
+      </ul>
+
+      <h3>4. Compartir información</h3>
+      <p><strong>No vendemos, alquilamos ni compartimos tu información personal con terceros</strong> con fines comerciales. Solo compartimos datos con:</p>
+      <ul>
+        <li>Google Firebase: almacenamiento y autenticación</li>
+        <li>Anthropic / OpenAI: procesamiento de mensajes del asesor IA (sin almacenamiento permanente por parte de estos proveedores según sus políticas)</li>
+        <li>Vercel: hosting de la aplicación</li>
+      </ul>
+
+      <h3>5. Espacios compartidos</h3>
+      <p>Si usas la función de espacios compartidos, los miembros del espacio podrán ver los reportes consolidados del grupo. Los datos individuales de cada usuario permanecen privados según los permisos configurados.</p>
+
+      <h3>6. Tus derechos</h3>
+      <p>Tienes derecho a:</p>
+      <ul>
+        <li>Acceder a todos tus datos en cualquier momento (función de exportar backup)</li>
+        <li>Corregir información incorrecta</li>
+        <li>Eliminar tu cuenta y todos tus datos permanentemente</li>
+        <li>Solicitar una copia de tus datos en formato portable (JSON/CSV)</li>
+      </ul>
+
+      <h3>7. Cookies y almacenamiento local</h3>
+      <p>Usamos cookies de sesión de Firebase para mantener tu sesión activa. No usamos cookies de rastreo ni publicidad de terceros.</p>
+
+      <h3>8. Menores de edad</h3>
+      <p>Ahorrapp Pro no está dirigido a menores de 18 años. No recopilamos intencionalmente datos de menores. Si eres padre/madre y crees que tu hijo usó la app, contáctanos para eliminar su información.</p>
+
+      <h3>9. Cambios a esta política</h3>
+      <p>Te notificaremos de cambios materiales a esta política con al menos 30 días de anticipación vía email o notificación en la app.</p>
+
+      <h3>10. Ley aplicable</h3>
+      <p>Esta política se rige por la Ley 1581 de 2012 (Ley de Protección de Datos Personales de Colombia) y sus decretos reglamentarios.</p>
+
+      <h3>11. Contacto</h3>
+      <p>Para ejercer tus derechos o hacer preguntas sobre privacidad: soporte@ahorrapp.pro</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CURSOR ──
+const cursor = document.getElementById('cursor');
+const ring   = document.getElementById('cursor-ring');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top  = e.clientY + 'px';
+  ring.style.left   = e.clientX + 'px';
+  ring.style.top    = e.clientY + 'px';
+});
+document.querySelectorAll('a, button, .dot').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cursor.style.width = '20px';
+    cursor.style.height = '20px';
+    ring.style.width = '52px';
+    ring.style.height = '52px';
+  });
+  el.addEventListener('mouseleave', () => {
+    cursor.style.width = '12px';
+    cursor.style.height = '12px';
+    ring.style.width = '36px';
+    ring.style.height = '36px';
+  });
+});
+
+// ── THREE.JS ORB ──
+const canvas = document.getElementById('orb-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, canvas.offsetWidth / canvas.offsetHeight, 0.1, 100);
+camera.position.set(0, 0, 4.5);
+
+// Core sphere
+const geoCore = new THREE.SphereGeometry(1, 64, 64);
+const matCore = new THREE.MeshPhongMaterial({
+  color: 0x0d0a1a,
+  emissive: 0x8b5cf6,
+  emissiveIntensity: 0.15,
+  transparent: true,
+  opacity: 0.85,
+  wireframe: false,
+});
+const core = new THREE.Mesh(geoCore, matCore);
+scene.add(core);
+
+// Wireframe shell
+const geoWire = new THREE.SphereGeometry(1.02, 24, 24);
+const matWire = new THREE.MeshBasicMaterial({
+  color: 0x8b5cf6,
+  wireframe: true,
+  transparent: true,
+  opacity: 0.08,
+});
+const wire = new THREE.Mesh(geoWire, matWire);
+scene.add(wire);
+
+// Outer glow ring
+const geoRing1 = new THREE.TorusGeometry(1.4, 0.004, 8, 120);
+const matRing  = new THREE.MeshBasicMaterial({ color: 0x8b5cf6, transparent: true, opacity: 0.5 });
+const ring1 = new THREE.Mesh(geoRing1, matRing);
+ring1.rotation.x = Math.PI / 2.5;
+scene.add(ring1);
+
+const geoRing2 = new THREE.TorusGeometry(1.7, 0.002, 8, 120);
+const matRing2 = new THREE.MeshBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.25 });
+const ring2 = new THREE.Mesh(geoRing2, matRing2);
+ring2.rotation.x = Math.PI / 3;
+ring2.rotation.y = Math.PI / 4;
+scene.add(ring2);
+
+// Particles
+const particleCount = 300;
+const positions = new Float32Array(particleCount * 3);
+for (let i = 0; i < particleCount; i++) {
+  const theta = Math.random() * Math.PI * 2;
+  const phi   = Math.acos(2 * Math.random() - 1);
+  const r     = 1.2 + Math.random() * 1.2;
+  positions[i*3]   = r * Math.sin(phi) * Math.cos(theta);
+  positions[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+  positions[i*3+2] = r * Math.cos(phi);
+}
+const geoParts = new THREE.BufferGeometry();
+geoParts.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+const matParts = new THREE.PointsMaterial({ color: 0x8b5cf6, size: 0.022, transparent: true, opacity: 0.6 });
+const particles = new THREE.Points(geoParts, matParts);
+scene.add(particles);
+
+// Lights
+scene.add(new THREE.AmbientLight(0x0d0a1a, 1));
+const light1 = new THREE.PointLight(0x8b5cf6, 3, 8);
+light1.position.set(2, 2, 2);
+scene.add(light1);
+const light2 = new THREE.PointLight(0x3b82f6, 1.5, 8);
+light2.position.set(-2, -1, 1);
+scene.add(light2);
+
+// Mouse interaction
+let mouseX = 0, mouseY = 0;
+document.addEventListener('mousemove', e => {
+  mouseX = (e.clientX / window.innerWidth  - 0.5) * 0.6;
+  mouseY = (e.clientY / window.innerHeight - 0.5) * 0.4;
+});
+
+// Animate
+function animate() {
+  requestAnimationFrame(animate);
+  const t = Date.now() * 0.001;
+
+  core.rotation.y  += 0.003;
+  core.rotation.x  += 0.001;
+  wire.rotation.y  -= 0.002;
+  wire.rotation.x  += 0.001;
+  ring1.rotation.z += 0.004;
+  ring2.rotation.z -= 0.003;
+  ring2.rotation.y += 0.002;
+  particles.rotation.y += 0.001;
+
+  // Float
+  core.position.y = Math.sin(t * 0.5) * 0.08;
+  wire.position.y = core.position.y;
+
+  // Mouse follow
+  scene.rotation.y += (mouseX - scene.rotation.y) * 0.04;
+  scene.rotation.x += (mouseY - scene.rotation.x) * 0.04;
+
+  // Pulse emissive
+  matCore.emissiveIntensity = 0.12 + Math.sin(t * 1.5) * 0.06;
+
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  const w = canvas.offsetWidth;
+  const h = canvas.offsetHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+});
+
+// ── SLIDES ──
+let currentSlide = 0;
+const totalSlides = 5;
+const track = document.getElementById('slidesTrack');
+const cards  = track.querySelectorAll('.slide-card');
+const dots   = document.querySelectorAll('.dot');
+
+function updateSlides() {
+  const cardWidth = cards[0].offsetWidth + 24;
+  track.style.transform = `translateX(-${currentSlide * cardWidth}px)`;
+  cards.forEach((c, i) => c.classList.toggle('active', i === currentSlide));
+  dots.forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+}
+
+function moveSlide(dir) {
+  currentSlide = (currentSlide + dir + totalSlides) % totalSlides;
+  updateSlides();
+}
+
+function goToSlide(i) {
+  currentSlide = i;
+  updateSlides();
+}
+
+// Auto-advance
+setInterval(() => moveSlide(1), 5000);
+
+// Touch support
+let touchStartX = 0;
+track.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
+track.addEventListener('touchend', e => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 50) moveSlide(diff > 0 ? 1 : -1);
+});
+
+// ── SCROLL REVEAL ──
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── MODALS ──
+function openModal(type) {
+  document.getElementById(type + 'Modal').classList.add('open');
+  event.preventDefault();
+}
+function closeModal(type) {
+  document.getElementById(type + 'Modal').classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ── AUTH REDIRECT ──
+function showAuth() {
+  event.preventDefault();
+  // Oculta el landing y muestra el auth layer de la app
+  document.getElementById('landingPage').style.display = 'none';
+  document.getElementById('authLayer').classList.remove('hide');
+}
+</script>
+</div>
+
 <!-- ══════════ AUTH ══════════ -->
-<div id="authLayer">
+<div id="authLayer" class="hide">
   <div class="auth-bg"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
 
   <div class="auth-card" id="loginCard">
