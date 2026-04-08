@@ -28,7 +28,7 @@
       /* Texto */
       --text:#f0f7f2;
       --text2:#7a9e86;
-      --text3:#3d5c47;
+      --text3:#5a7d65;
 
       /* Acento principal: verde */
       --green:#22c55e;
@@ -408,7 +408,7 @@
     .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-bottom:14px}
     .form-group{display:flex;flex-direction:column;gap:5px}
     .form-label{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.6px}
-    input,select,textarea{background:var(--s2);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;transition:border-color .15s,box-shadow .15s;appearance:none}
+    input,select,textarea{background:var(--s2);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);padding:12px 14px;font-size:13px;min-height:44px;font-family:'DM Sans',sans-serif;width:100%;transition:border-color .15s,box-shadow .15s;appearance:none}
     input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px var(--green-glow)}
     input[type="color"]{padding:4px 6px;height:38px;cursor:pointer}
     select option{background:var(--s3)}
@@ -612,6 +612,10 @@
     }
 
 
+    /* ── ACCESIBILIDAD ── */
+    *:focus-visible{outline:2px solid var(--green);outline-offset:3px;border-radius:4px}
+    *:focus:not(:focus-visible){outline:none}
+
     /* ── MICROANIMACIONES ── */
 
     /* Entrada suave de modales */
@@ -674,6 +678,7 @@
     * { scroll-behavior: smooth }
 
     @media(max-width:640px){.two-col{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr 1fr}.nav-tab{padding:12px 10px;font-size:12px}}
+    @media(max-width:768px){input,select,textarea{font-size:16px!important}}
   </style>
 <script>
   function showAuth(mode) {
