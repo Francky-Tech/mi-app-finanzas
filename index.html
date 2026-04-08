@@ -538,13 +538,159 @@
 
     hr.div{border:none;border-top:1px solid var(--border);margin:14px 0}
 
+
+    /* ── HAMBURGUESA Y MÓVIL ── */
+    .l-ham-btn{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px}
+    .l-ham-btn span{display:block;width:22px;height:2px;background:var(--text);border-radius:2px;transition:all .3s}
+    .l-ham-btn.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+    .l-ham-btn.open span:nth-child(2){opacity:0}
+    .l-ham-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+    .l-mobile-menu{
+      display:none;position:fixed;top:57px;left:0;right:0;z-index:199;
+      background:rgba(8,12,10,.98);backdrop-filter:blur(20px);
+      border-bottom:1px solid rgba(34,197,94,.1);
+      padding:20px 24px;flex-direction:column;gap:4px;
+    }
+    .l-mobile-menu.open{display:flex}
+    .l-mobile-menu a, .l-mobile-menu button{
+      font-size:15px;color:var(--text2);background:none;border:none;
+      padding:12px 0;border-bottom:1px solid rgba(34,197,94,.06);
+      cursor:pointer;text-align:left;width:100%;transition:color .2s;
+    }
+    .l-mobile-menu a:last-child, .l-mobile-menu button:last-child{border-bottom:none}
+    .l-mobile-menu a:hover, .l-mobile-menu button:hover{color:var(--green)}
+    .l-mobile-menu .mob-cta{
+      margin-top:8px;background:var(--green)!important;color:#051209!important;
+      border-radius:8px;padding:13px 0!important;font-family:'Syne',sans-serif;
+      font-weight:700;text-align:center!important;border-bottom:none!important;
+    }
+
+    @media(max-width:768px){
+      .l-ham-btn{display:flex}
+      .l-nav-links{display:none}
+      .l-nav-cta{display:none}
+      .l-nav{padding:14px 20px}
+      #l-hero{padding:80px 20px 48px}
+      #l-orb-canvas{width:100%;opacity:.15}
+      .l-float-card{display:none}
+      .l-hero-content{max-width:100%}
+      .l-stats{gap:20px;flex-wrap:wrap}
+      .l-stat-n{font-size:22px}
+      .l-cta-row{flex-direction:column;align-items:flex-start;gap:12px}
+      .l-btn-primary{width:100%;text-align:center}
+      .l-slide{flex:0 0 calc(100vw - 40px);padding:28px 24px}
+      .l-slides-track{padding:0 20px}
+      .l-controls{padding:0 20px}
+      #l-cta{padding:72px 20px}
+      .l-cta-title{font-size:clamp(28px,8vw,48px)}
+      .l-footer{padding:32px 20px}
+      .l-footer-top{flex-direction:column}
+      .l-footer-bottom{flex-direction:column;align-items:flex-start}
+    }
+
+    @media(max-width:480px){
+      .l-h1{font-size:clamp(32px,9vw,52px);letter-spacing:-1.5px}
+      .l-sub{font-size:14px}
+      .l-section-title{font-size:clamp(22px,7vw,36px)}
+      .l-slide-title{font-size:22px}
+      .l-cta-btn{width:100%;padding:16px 24px}
+    }
+
+    /* App interna móvil */
+    @media(max-width:640px){
+      .header{padding:0 12px}
+      .h-title{font-size:14px}
+      #btnInstalar{display:none!important}
+      .two-col{grid-template-columns:1fr}
+      .stats-grid{grid-template-columns:1fr 1fr}
+      .main{padding:16px 12px 80px}
+    }
+    @media(max-width:380px){
+      .stats-grid{grid-template-columns:1fr}
+      .ai-badge{display:none}
+    }
+
+
+    /* ── MICROANIMACIONES ── */
+
+    /* Entrada suave de modales */
+    .modal-overlay{transition:opacity .25s ease}
+    .modal{
+      transform:translateY(12px) scale(0.98);
+      opacity:0;
+      transition:transform .3s cubic-bezier(.34,1.4,.64,1), opacity .25s ease;
+    }
+    .modal-overlay.open .modal{transform:translateY(0) scale(1);opacity:1}
+
+    /* Cards con hover lift */
+    .card{transition:box-shadow .2s ease, border-color .2s ease}
+    .card:hover{box-shadow:0 4px 24px rgba(34,197,94,.06)}
+
+    .stat-card{transition:border-color .2s, transform .2s, box-shadow .2s}
+    .stat-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+
+    .meta-card{transition:border-color .2s, transform .2s, box-shadow .2s}
+    .meta-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.25)}
+
+    .tx-item{transition:border-color .15s, background .15s, transform .15s}
+    .tx-item:hover{transform:translateX(3px)}
+
+    /* Botones con feedback táctil mejorado */
+    .btn{transition:all .15s cubic-bezier(.34,1.4,.64,1)}
+    .btn:active{transform:scale(.95)!important}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(34,197,94,.3)}
+    .btn-ai:hover{transform:translateY(-1px)}
+
+    /* Tabs con transición suave */
+    .tab-section{animation:tabIn .25s ease both}
+    @keyframes tabIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+    /* Nav tabs con indicador animado */
+    .nav-tab{position:relative;transition:color .15s}
+    .nav-tab::after{content:'';position:absolute;bottom:-1px;left:50%;right:50%;height:2px;background:var(--green);transition:all .25s cubic-bezier(.34,1.4,.64,1)}
+    .nav-tab.active::after{left:0;right:0}
+
+    /* Auth card entrada */
+    .auth-card{animation:authIn .4s cubic-bezier(.34,1.2,.64,1) both}
+    @keyframes authIn{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:none}}
+
+    /* Landing slide cards */
+    .l-slide{transition:border-color .3s, box-shadow .3s, transform .3s}
+    .l-slide.active{transform:translateY(-4px)}
+
+    /* Slide pill hover */
+    .l-slide-pill{transition:background .2s, box-shadow .2s}
+    .l-slide:hover .l-slide-pill{background:rgba(34,197,94,.18);box-shadow:0 0 20px rgba(34,197,94,.1)}
+
+    /* Float card animación mejorada */
+    .l-float-card{transition:box-shadow .3s}
+    .l-float-card:hover{box-shadow:0 28px 80px rgba(0,0,0,.5), 0 0 40px rgba(34,197,94,.08)}
+
+    /* Toast entrada más fluida */
+    .toast{transition:all .35s cubic-bezier(.34,1.4,.64,1)}
+
+    /* Scroll suave en toda la app */
+    * { scroll-behavior: smooth }
+
     @media(max-width:640px){.two-col{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr 1fr}.nav-tab{padding:12px 10px;font-size:12px}}
-    @media(max-width:380px){.stats-grid{grid-template-columns:1fr}}
   </style>
 <script>
-  function showAuth() {
+  function showAuth(mode) {
     document.getElementById('landingPage').style.display='none';
     document.getElementById('authLayer').classList.remove('hide');
+    // Por defecto "Empezar gratis" → registro; "Ingresar" → login
+    if (mode === 'login') {
+      document.getElementById('loginCard').style.display='block';
+      document.getElementById('regCard').style.display='none';
+    } else {
+      document.getElementById('loginCard').style.display='none';
+      document.getElementById('regCard').style.display='block';
+    }
+  }
+  function hideAuth() {
+    document.getElementById('authLayer').classList.add('hide');
+    document.getElementById('landingPage').style.display='block';
   }
   function lOpenModal(t) { var e=document.getElementById('l'+t[0].toUpperCase()+t.slice(1)+'Modal'); if(e)e.classList.add('open'); }
   function lCloseModal(t) { var e=document.getElementById('l'+t[0].toUpperCase()+t.slice(1)+'Modal'); if(e)e.classList.remove('open'); }
@@ -561,8 +707,20 @@
       <button class="l-nav-link" onclick="document.getElementById('l-slides').scrollIntoView({behavior:'smooth'})">Funcionalidades</button>
       <button class="l-nav-link" onclick="document.getElementById('l-cta').scrollIntoView({behavior:'smooth'})">Precios</button>
     </div>
-    <button class="l-nav-cta" onclick="showAuth()">Ingresar →</button>
+    <button class="l-nav-cta" onclick="showAuth('login')">Ingresar →</button>
+    <!-- Hamburguesa móvil -->
+    <button class="l-ham-btn" id="hamBtn" onclick="toggleHamMenu()" aria-label="Menú">
+      <span></span><span></span><span></span>
+    </button>
   </nav>
+
+  <!-- Menú móvil -->
+  <div class="l-mobile-menu" id="mobileMenu">
+    <button onclick="document.getElementById('l-slides').scrollIntoView({behavior:'smooth'});toggleHamMenu()">Funcionalidades</button>
+    <button onclick="document.getElementById('l-cta').scrollIntoView({behavior:'smooth'});toggleHamMenu()">Precios</button>
+    <button onclick="showAuth();toggleHamMenu()">⚡ Empezar gratis</button>
+    <button class="mob-cta" onclick="showAuth('login');toggleHamMenu()">Iniciar sesión</button>
+  </div>
 
   <section id="l-hero">
     <div class="l-hero-bg"></div>
@@ -673,7 +831,7 @@
           <h4>Producto</h4>
           <a onclick="document.getElementById('l-slides').scrollIntoView({behavior:'smooth'})">Funcionalidades</a>
           <a onclick="showAuth()">Registrarse</a>
-          <a onclick="showAuth()">Iniciar sesión</a>
+          <a onclick="showAuth('login')">Iniciar sesión</a>
         </div>
         <div class="l-fc">
           <h4>Legal</h4>
@@ -737,6 +895,8 @@
 <!-- ══════════ AUTH ══════════ -->
 <div id="authLayer" class="hide">
   <div class="auth-bg"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
+  <!-- Botón cerrar auth → volver al landing -->
+  <button onclick="hideAuth()" style="position:absolute;top:20px;right:24px;background:rgba(13,20,16,.8);border:1px solid var(--border2);border-radius:50%;width:40px;height:40px;color:var(--text2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;z-index:10" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">✕</button>
 
   <div class="auth-card" id="loginCard">
     <div class="auth-brand"><div class="auth-icon">A</div><div class="auth-name">Ahorrapp <em>Pro</em></div></div>
@@ -1002,6 +1162,19 @@ onAuthStateChanged(auth, async user => {
 
 <script>
 // ── LANDING LOGIC ── (showAuth en head)
+
+// Hamburguesa
+function toggleHamMenu() {
+  const btn  = document.getElementById('hamBtn');
+  const menu = document.getElementById('mobileMenu');
+  btn?.classList.toggle('open');
+  menu?.classList.toggle('open');
+}
+// Cerrar menú al hacer scroll
+window.addEventListener('scroll', () => {
+  document.getElementById('hamBtn')?.classList.remove('open');
+  document.getElementById('mobileMenu')?.classList.remove('open');
+}, { passive: true });
 
 // Orbe Three.js
 (function initOrb() {
