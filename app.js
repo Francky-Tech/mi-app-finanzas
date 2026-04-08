@@ -257,8 +257,8 @@ Nombre del usuario: ${CURRENT_USER.displayName || 'Usuario'}`;
     console.warn('Onboarding IA error:', e);
     addObMsg('ai', 'Tuve un pequeño problema al conectarme, pero no hay problema — voy a configurar tu app con los datos que me diste. ¡Ya casi estamos!');
     // Configuración manual básica
-    APP_CONFIG.tabs = ['dashboard','ai','transactions','savings','settings'];
-    if (PERFIL.deuda?.saldo > 0) APP_CONFIG.tabs.splice(3,0,'deuda');
+    APP_CONFIG.tabs = ['dashboard','ai','transactions','gastos-prog','savings','settings'];
+    if (PERFIL.deudas?.length > 0) APP_CONFIG.tabs.splice(3,0,'deuda');
     await delay(1500);
   }
 
@@ -268,7 +268,7 @@ Nombre del usuario: ${CURRENT_USER.displayName || 'Usuario'}`;
 
 function skipOnboarding() {
   document.getElementById('onboardLayer').classList.remove('show');
-  APP_CONFIG.tabs = ['dashboard','ai','transactions','savings','settings'];
+  APP_CONFIG.tabs = ['dashboard','ai','transactions','gastos-prog','savings','settings'];
   launchApp();
 }
 
@@ -317,7 +317,11 @@ function launchApp() {
 
 function buildNav() {
   const nav   = document.getElementById('mainNav');
-  const tabs  = APP_CONFIG.tabs?.length ? APP_CONFIG.tabs : ALL_TABS.filter(t=>t.always).map(t=>t.id);
+  // Siempre incluir tabs "always:true" aunque no estén en el config guardado
+  const alwaysIds = ALL_TABS.filter(t=>t.always).map(t=>t.id);
+  const base  = APP_CONFIG.tabs?.length ? APP_CONFIG.tabs : alwaysIds;
+  const tabs  = [...new Set([...base, ...alwaysIds])];
+  APP_CONFIG.tabs = tabs; // actualizar en memoria
   const defs  = Object.fromEntries(ALL_TABS.map(t=>[t.id,t]));
 
   nav.innerHTML = tabs.map(id => {
