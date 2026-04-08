@@ -682,7 +682,7 @@
         </div>
         <div class="l-fc">
           <h4>Soporte</h4>
-          <a href="mailto:soporte@ahorrapp.pro">Contacto</a>
+          <a href="/cdn-cgi/l/email-protection#5a29352a35282e3f1a3b323528283b2a2a742a2835">Contacto</a>
         </div>
       </div>
     </div>
@@ -711,7 +711,7 @@
       <h3>6. Datos y privacidad</h3><p>Tus datos se almacenan en Firebase (Google Cloud) con cifrado. No vendemos tu información personal. Ver Política de Privacidad.</p>
       <h3>7. Propiedad intelectual</h3><p>Ahorrapp Pro y todo su contenido son propiedad exclusiva del desarrollador. No puedes copiar, modificar ni distribuir sin autorización escrita.</p>
       <h3>8. Jurisdicción</h3><p>Estos términos se rigen por las leyes de la República de Colombia. Disputas se resolverán en los tribunales de Bogotá.</p>
-      <h3>9. Contacto</h3><p>soporte@ahorrapp.pro</p>
+      <h3>9. Contacto</h3><p><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="cfbca0bfa0bdbbaa8faea7a0bdbdaebfbfe1bfbda0">[email&#160;protected]</a></p>
     </div>
   </div>
 </div>
@@ -729,7 +729,7 @@
       <h3>4. Compartir información</h3><p>No vendemos ni compartimos tu información con fines comerciales. Solo con: Google Firebase (almacenamiento), Anthropic/OpenAI (IA, sin almacenamiento permanente) y Vercel (hosting).</p>
       <h3>5. Tus derechos</h3><p>Puedes acceder, corregir, eliminar tus datos y exportarlos en JSON/CSV en cualquier momento desde la app.</p>
       <h3>6. Ley aplicable</h3><p>Ley 1581 de 2012 (Protección de Datos Personales de Colombia) y sus decretos reglamentarios.</p>
-      <h3>7. Contacto</h3><p>soporte@ahorrapp.pro</p>
+      <h3>7. Contacto</h3><p><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="2e5d415e415c5a4b6e4f46415c5c4f5e5e005e5c41">[email&#160;protected]</a></p>
     </div>
   </div>
 </div>
@@ -904,7 +904,7 @@
 <div class="toast" id="toast"></div>
 
 <!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script type="module">
 import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -1090,20 +1090,5 @@ document.querySelectorAll('.l-modal-overlay').forEach(m => m.addEventListener('c
 <script src="app.js"></script>
 <script type="module" src="spaces.js"></script>
 <script type="module" src="spaces-ui.js"></script>
-<script src="app.js"></script>
-<script type="module" src="spaces.js"></script>
-<script type="module" src="spaces-ui.js"></script>
-<script>
-// PWA Install
-let _dProm=null;
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();_dProm=e;const b=document.getElementById('btnInstalar');if(b)b.style.display='inline-block';});
-window.instalarApp=async function(){
-  if(!_dProm){showToast&&showToast('Menú del navegador → "Agregar a pantalla de inicio"','blue');return;}
-  _dProm.prompt();const{outcome}=await _dProm.userChoice;
-  if(outcome==='accepted')showToast&&showToast('¡App instalada! 🎉','green');
-  _dProm=null;document.getElementById('btnInstalar').style.display='none';
-};
-window.addEventListener('appinstalled',()=>{showToast&&showToast('Ahorrapp Pro instalada ✓','green');});
-</script>
 </body>
 </html>

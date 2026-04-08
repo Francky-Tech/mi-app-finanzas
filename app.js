@@ -615,70 +615,168 @@ function buildDonut() {
 }
 
 // ============================================================
-// DEUDA TC
+// DEUDA — múltiples deudas configurables por usuario
 // ============================================================
+let deudaEditIdx = null;
+
 function renderDeuda() {
-  // Populate inputs from perfil
-  const d = PERFIL.deuda || {};
-  setVal('dSaldo',  d.saldo||0);
-  setVal('dCuota',  d.cuota||750000);
-  setVal('dTasa',   ((d.tasa||0.01546)*100).toFixed(3));
-  setVal('dManejo', d.manejo||36000);
-  recalcDeuda();
-}
+  const deudas = PERFIL.deudas || [];
+  const el = document.getElementById('deudaListado');
+  if (!el) return;
 
-function recalcDeuda() {
-  const saldo  = +getVal('dSaldo')  || 0;
-  const cuota  = +getVal('dCuota')  || 750000;
-  const tasa   = (+getVal('dTasa')  || 1.546)/100;
-  const manejo = +getVal('dManejo') || 36000;
-
-  // Amortizar
-  const rows = []; let s=saldo, intTotal=0, manejoTotal=0;
-  const mLabels = ['Abr 2025','May 2025','Jun 2025','Jul 2025','Ago 2025','Sep 2025','Oct 2025','Nov 2025','Dic 2025','Ene 2026','Feb 2026','Mar 2026'];
-  for(let i=0;i<24&&s>0;i++){
-    const int=Math.round(s*tasa);
-    const abono=Math.max(0,cuota-int-manejo);
-    intTotal+=int; manejoTotal+=manejo;
-    s=Math.max(0,s-abono);
-    rows.push({ mes:mLabels[i]||`Mes ${i+1}`, si:s+abono, int, manejo, abono, sf:s });
-    if(s===0)break;
+  if (!deudas.length) {
+    el.innerHTML = '<div class="empty-st"><div class="empty-icon">💳</div><p>No tienes deudas registradas</p><p style="font-size:12px;margin-top:6px">Agrega una para ver amortización y escenarios de pago</p></div>';
+    const det = document.getElementById('deudaDetalle');
+    if (det) det.innerHTML = '';
+    return;
   }
 
-  const res = document.getElementById('deudaRes');
-  if(res) res.innerHTML = `
-    <div class="stats-grid" style="margin-bottom:14px">
-      <div class="stat-card sc-red"><div class="stat-label">Saldo</div><div class="stat-value" style="color:var(--red)">${fmt(saldo)}</div></div>
-      <div class="stat-card sc-yellow"><div class="stat-label">Tasa mensual</div><div class="stat-value" style="color:var(--yellow)">${(tasa*100).toFixed(3)}%</div><div class="stat-sub">${((Math.pow(1+tasa,12)-1)*100).toFixed(1)}% EA</div></div>
-      <div class="stat-card sc-blue"><div class="stat-label">Meses para liquidar</div><div class="stat-value" style="color:var(--blue)">${rows.length}</div><div class="stat-sub">${rows[rows.length-1]?.mes||''}</div></div>
-      <div class="stat-card sc-red"><div class="stat-label">Costo total</div><div class="stat-value" style="color:var(--red)">${fmt(intTotal+manejoTotal)}</div></div>
+  el.innerHTML = deudas.map((d,i) => {
+    const meses = calcMesesDeuda(d);
+    return `<div class="meta-card" style="cursor:pointer" onclick="verDetalleDeuda(${i})">
+      <div class="meta-header">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px">${esc(d.nombre)}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:3px">${d.tasa}% mensual · ${meses} meses restantes</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'DM Mono',monospace;font-weight:600;color:var(--red);font-size:16px">${fmt(d.saldo)}</div>
+          <div style="font-size:11px;color:var(--text3)">cuota ${fmt(d.cuota)}/mes</div>
+        </div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100,Math.round((1-(d.saldo/(d.saldoInicial||d.saldo||1)))*100))}%;background:var(--red)"></div></div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editarDeuda(${i})">✏️ Editar</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="event.stopPropagation();eliminarDeuda(${i})">🗑 Eliminar</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  verDetalleDeuda(0);
+}
+
+function calcMesesDeuda(d) {
+  let s = d.saldo || 0;
+  const tasa = (d.tasa || 1.5) / 100;
+  const cuota = d.cuota || 0;
+  const manejo = d.manejo || 0;
+  let m = 0;
+  while (s > 0 && m < 360) {
+    const int = Math.round(s * tasa);
+    const abono = Math.max(0, cuota - int - manejo);
+    if (abono <= 0) return '∞';
+    s = Math.max(0, s - abono);
+    m++;
+  }
+  return m;
+}
+
+function verDetalleDeuda(idx) {
+  const d = (PERFIL.deudas || [])[idx];
+  if (!d) return;
+  const saldo  = d.saldo || 0;
+  const cuota  = d.cuota || 0;
+  const tasa   = (d.tasa || 1.5) / 100;
+  const manejo = d.manejo || 0;
+
+  const rows = []; let s = saldo, intTotal = 0, manejoTotal = 0;
+  for (let i = 0; i < 60 && s > 0; i++) {
+    const int = Math.round(s * tasa);
+    const abono = Math.max(0, cuota - int - manejo);
+    intTotal += int; manejoTotal += manejo;
+    s = Math.max(0, s - abono);
+    const fecha = new Date(); fecha.setMonth(fecha.getMonth() + i + 1);
+    rows.push({ mes: fecha.toLocaleDateString('es-CO',{month:'short',year:'numeric'}), si:s+abono, int, manejo, abono, sf:s });
+    if (s === 0) break;
+  }
+
+  const scenarios = [cuota, cuota+50000, cuota+100000, cuota+250000].map(c => {
+    let s2 = saldo, m2 = 0, ci = 0;
+    for (let i = 0; i < 120 && s2 > 0; i++) {
+      const int = Math.round(s2 * tasa);
+      ci += int + manejo;
+      s2 = Math.max(0, s2 - Math.max(0, c - int - manejo));
+      m2++;
+    }
+    return { cuota: c, meses: m2, costo: ci };
+  });
+
+  const det = document.getElementById('deudaDetalle');
+  if (!det) return;
+  det.innerHTML = `
+    <div class="card">
+      <div class="card-title">📊 ${esc(d.nombre)} — Análisis</div>
+      <div class="stats-grid" style="margin-bottom:14px">
+        <div class="stat-card sc-red"><div class="stat-label">Saldo</div><div class="stat-value" style="color:var(--red)">${fmt(saldo)}</div></div>
+        <div class="stat-card sc-yellow"><div class="stat-label">Tasa</div><div class="stat-value" style="color:var(--yellow)">${d.tasa}%</div><div class="stat-sub">${((Math.pow(1+tasa,12)-1)*100).toFixed(1)}% EA</div></div>
+        <div class="stat-card sc-green"><div class="stat-label">Meses</div><div class="stat-value" style="color:var(--green)">${rows.length}</div></div>
+        <div class="stat-card sc-red"><div class="stat-label">Costo total</div><div class="stat-value" style="color:var(--red)">${fmt(intTotal+manejoTotal)}</div></div>
+      </div>
+      <div class="box-y" style="margin-bottom:14px">💡 Pagando ${fmt(cuota+50000)}/mes liquidas antes y ahorras en intereses.</div>
     </div>
-    <div class="box-y">⚡ Subir el pago a ${fmt(cuota+50000)}/mes te ahorra ~${fmt(Math.round((intTotal+manejoTotal)*0.12))} y liquida ~1 mes antes.</div>`;
-
-  const t = document.getElementById('amortT');
-  if(t) t.innerHTML = `<thead><tr><th>Mes</th><th>Saldo inicio</th><th>Interés</th><th>Manejo</th><th>Abono capital</th><th>Saldo final</th></tr></thead>
-    <tbody>${rows.map(r=>`<tr class="${r.sf===0?'hl':''}">
-      <td>${r.mes}</td><td>${fmt(r.si)}</td>
-      <td style="color:var(--red)">-${fmt(r.int)}</td>
-      <td style="color:var(--yellow)">-${fmt(r.manejo)}</td>
-      <td style="color:var(--green)">+${fmt(r.abono)}</td>
-      <td style="color:${r.sf===0?'var(--green)':'var(--red)'}">${r.sf===0?'✓ $0':fmt(r.sf)}</td>
-    </tr>`).join('')}</tbody>`;
-
-  const esc = document.getElementById('escenarios');
-  if(esc){
-    const scenarios=[{l:'Actual',c:cuota},{l:`+${fmt(50000)}`,c:cuota+50000},{l:`+${fmt(250000)}`,c:cuota+250000}].map(sc=>{
-      let s2=saldo,m2=0,ci=0; for(let i=0;i<36&&s2>0;i++){const int=Math.round(s2*tasa);ci+=int+manejo;s2=Math.max(0,s2-Math.max(0,sc.c-int-manejo));m2++;}
-      return {...sc,meses:m2,costo:ci};
-    });
-    esc.innerHTML=`<table class="amort-t"><thead><tr><th>Escenario</th><th>Cuota</th><th>Meses</th><th>Costo total</th><th>Ahorro</th></tr></thead>
+    <div class="card"><div class="card-title">📊 Escenarios de pago</div>
+      <table class="amort-t"><thead><tr><th>Cuota</th><th>Meses</th><th>Costo total</th><th>Ahorro vs actual</th></tr></thead>
       <tbody>${scenarios.map((sc,i)=>`<tr class="${i>0?'hl':''}">
-        <td>${sc.l}</td><td>${fmt(sc.c)}</td><td>${sc.meses}</td>
-        <td style="color:var(--red)">-${fmt(sc.costo)}</td>
+        <td style="font-weight:${i===0?600:400}">${fmt(sc.cuota)}${i===0?' (actual)':''}</td>
+        <td>${sc.meses}</td><td style="color:var(--red)">-${fmt(sc.costo)}</td>
         <td style="color:var(--green)">${i===0?'—':'+'+fmt(scenarios[0].costo-sc.costo)}</td>
-      </tr>`).join('')}</tbody></table>`;
-  }
+      </tr>`).join('')}</tbody></table>
+    </div>
+    <div class="card"><div class="card-title">📋 Amortización mes a mes</div>
+      <div style="overflow-x:auto"><table class="amort-t"><thead><tr><th>Mes</th><th>Saldo inicio</th><th>Interés</th><th>Manejo</th><th>Abono capital</th><th>Saldo final</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr class="${r.sf===0?'hl':''}">
+        <td>${r.mes}</td><td>${fmt(r.si)}</td>
+        <td style="color:var(--red)">-${fmt(r.int)}</td>
+        <td style="color:var(--yellow)">-${fmt(r.manejo)}</td>
+        <td style="color:var(--green)">+${fmt(r.abono)}</td>
+        <td style="color:${r.sf===0?'var(--green)':'var(--red)'}">${r.sf===0?'✓ $0':fmt(r.sf)}</td>
+      </tr>`).join('')}</tbody></table></div>
+    </div>`;
 }
+
+function abrirModalDeuda(idx = null) {
+  deudaEditIdx = idx;
+  const d = idx !== null ? (PERFIL.deudas||[])[idx] : {};
+  document.getElementById('dNombre').value = d.nombre||'';
+  document.getElementById('dSaldo').value  = d.saldo||'';
+  document.getElementById('dCuota').value  = d.cuota||'';
+  document.getElementById('dTasa').value   = d.tasa||'';
+  document.getElementById('dManejo').value = d.manejo||0;
+  document.getElementById('modalDeuda').classList.add('open');
+}
+
+function editarDeuda(idx) { abrirModalDeuda(idx); }
+
+async function guardarDeuda() {
+  const nombre = document.getElementById('dNombre')?.value.trim();
+  const saldo  = +document.getElementById('dSaldo')?.value;
+  const cuota  = +document.getElementById('dCuota')?.value;
+  const tasa   = +document.getElementById('dTasa')?.value;
+  const manejo = +document.getElementById('dManejo')?.value||0;
+  if (!nombre||!saldo||!cuota||!tasa) { showToast('Completa todos los campos','red'); return; }
+  if (!PERFIL.deudas) PERFIL.deudas = [];
+  const deuda = { id: Date.now(), nombre, saldo, saldoInicial: saldo, cuota, tasa, manejo };
+  if (deudaEditIdx !== null) {
+    deuda.saldoInicial = PERFIL.deudas[deudaEditIdx].saldoInicial || saldo;
+    PERFIL.deudas[deudaEditIdx] = deuda;
+  } else {
+    PERFIL.deudas.push(deuda);
+  }
+  await window._db.saveProfile(CURRENT_USER.uid, PERFIL);
+  document.getElementById('modalDeuda').classList.remove('open');
+  showToast(deudaEditIdx!==null?'Deuda actualizada ✓':'Deuda agregada ✓','green');
+  renderDeuda();
+}
+
+async function eliminarDeuda(idx) {
+  if (!confirm('¿Eliminar esta deuda?')) return;
+  PERFIL.deudas.splice(idx, 1);
+  await window._db.saveProfile(CURRENT_USER.uid, PERFIL);
+  showToast('Deuda eliminada','red');
+  renderDeuda();
+}
+
+function recalcDeuda() { renderDeuda(); }
 
 // ============================================================
 // PLAN APARTAMENTO
