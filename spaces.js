@@ -15,22 +15,39 @@ import { initializeApp, getApps }
 // ── Re-use existing Firebase instance ──
 function getDB() {
   if (window._DEMO_MODE) return null;
+  // Usar el db ya inicializado por index.html via window._dbSpaces
+  if (window._dbSpaces?.db) return window._dbSpaces.db;
+  // Fallback: intentar via getApps
   const apps = getApps();
-  if (!apps.length) {
-    console.warn('Firebase no inicializado aún');
-    return null;
-  }
-  return getFirestore(apps[0]);
+  if (apps.length) return getFirestore(apps[0]);
+  return null;
 }
 
-async function getDBReady(retries = 10) {
+async function getDBReady(retries = 20) {
   for (let i = 0; i < retries; i++) {
     const db = getDB();
     if (db) return db;
     await new Promise(r => setTimeout(r, 200));
   }
-  throw new Error('Firebase no disponible después de esperar');
+  throw new Error('Firebase no disponible. Recarga la página.');
 }
+
+// ══════════════════════════════════════════
+// FIRESTORE HELPERS — usa refs del index.html
+// ══════════════════════════════════════════
+function _doc(...args)    { return (window._dbSpaces?.doc    || doc)(...args); }
+function _setDoc(...args) { return (window._dbSpaces?.setDoc || setDoc)(...args); }
+function _getDoc(...args) { return (window._dbSpaces?.getDoc || getDoc)(...args); }
+function _updateDoc(...args) { return (window._dbSpaces?.updateDoc || updateDoc)(...args); }
+function _addDoc(...args) { return (window._dbSpaces?.addDoc || addDoc)(...args); }
+function _collection(...args) { return (window._dbSpaces?.collection || collection)(...args); }
+function _onSnapshot(...args) { return (window._dbSpaces?.onSnapshot || onSnapshot)(...args); }
+function _query(...args)  { return (window._dbSpaces?.query  || query)(...args); }
+function _orderBy(...args){ return (window._dbSpaces?.orderBy || orderBy)(...args); }
+function _getDocs(...args){ return (window._dbSpaces?.getDocs || getDocs)(...args); }
+function _serverTimestamp(){ return (window._dbSpaces?.serverTimestamp || serverTimestamp)(); }
+function _deleteDoc(...args){ return (window._dbSpaces?.deleteDoc || deleteDoc)(...args); }
+function _limit(...args)  { return (window._dbSpaces?.limit  || limit)(...args); }
 
 // ══════════════════════════════════════════
 // STATE
@@ -80,12 +97,13 @@ window.createSpace = async function(name, emoji = '💰') {
     localStorage.setItem('ap_space_' + id, JSON.stringify(space));
   } else {
     const db = await getDBReady();
-    await setDoc(doc(db, 'spaces', id), space);
-    // Add to user's space list
-    const userRef = doc(db, 'users', uid(), 'data', 'spaces');
-    const curr = (await getDoc(userRef)).data()?.list || [];
+    await _setDoc(_doc(db, 'spaces', id), space);
+    // Add to user's space list (safe: doc puede no existir aún)
+    const userRef = _doc(db, 'users', uid(), 'data', 'spaces');
+    const snap = await _getDoc(userRef);
+    const curr = snap.exists() ? (snap.data()?.list || []) : [];
     curr.push({ id, name, emoji, role: 'owner' });
-    await setDoc(userRef, { list: curr });
+    await _setDoc(userRef, { list: curr });
   }
 
   showToast(`Espacio "${name}" creado ✓`, 'green');
@@ -98,7 +116,7 @@ window.loadMySpaces = async function() {
     return demoGetList('ap_my_spaces_' + uid());
   }
   const db = await getDBReady();
-  const snap = await getDoc(doc(db, 'users', uid(), 'data', 'spaces'));
+  const snap = await _getDoc(_doc(db, 'users', uid(), 'data', 'spaces'));
   return snap.exists() ? (snap.data().list || []) : [];
 };
 
@@ -110,7 +128,7 @@ window.loadSpace = async function(spaceId) {
     spaceData = raw ? JSON.parse(raw) : null;
   } else {
     const db = await getDBReady();
-    const snap = await getDoc(doc(db, 'spaces', spaceId));
+    const snap = await _getDoc(_doc(db, 'spaces', spaceId));
     spaceData = snap.exists() ? snap.data() : null;
   }
 
@@ -192,7 +210,7 @@ window.addSpaceTx = async function(entry) {
     window.gastos = list;
   } else {
     const db = getDB();
-    await addDoc(collection(db, 'spaces', SPACE.current.id, 'gastos'), enriched);
+    await _addDoc(_collection(db, 'spaces', SPACE.current.id, 'gastos'), enriched);
   }
 
   // Post to chat
@@ -205,7 +223,7 @@ async function loadSpaceTx(spaceId) {
     return;
   }
   const db = getDB();
-  const snap = await getDocs(collection(db, 'spaces', spaceId, 'gastos'));
+  const snap = await _getDocs(_collection(db, 'spaces', spaceId, 'gastos'));
   window.gastos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
@@ -213,8 +231,8 @@ function subscribeSpaceTx(spaceId) {
   SPACE.unsubTx?.();
   if (window._DEMO_MODE) return;
   const db = getDB();
-  SPACE.unsubTx = onSnapshot(
-    query(collection(db, 'spaces', spaceId, 'gastos'), orderBy('createdAt', 'desc'), limit(200)),
+  SPACE.unsubTx = _onSnapshot(
+    _query(_collection(db, 'spaces', spaceId, 'gastos'), _orderBy('createdAt', 'desc'), _limit(200)),
     snap => {
       window.gastos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       // Refresh visible tab
@@ -237,8 +255,8 @@ function subscribeSpaceChat(spaceId) {
     return;
   }
   const db = getDB();
-  SPACE.unsubChat = onSnapshot(
-    query(collection(db, 'spaces', spaceId, 'messages'), orderBy('createdAt', 'asc'), limit(100)),
+  SPACE.unsubChat = _onSnapshot(
+    _query(_collection(db, 'spaces', spaceId, 'messages'), _orderBy('createdAt', 'asc'), _limit(100)),
     snap => {
       const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderChat(msgs);
@@ -262,8 +280,8 @@ window.postChatMessage = async function(text) {
     return;
   }
   const db = getDB();
-  await addDoc(collection(db, 'spaces', SPACE.current.id, 'messages'),
-    { ...msg, createdAt: serverTimestamp() });
+  await _addDoc(_collection(db, 'spaces', SPACE.current.id, 'messages'),
+    { ...msg, createdAt: _serverTimestamp() });
 };
 
 async function postChatActivity(text, type = 'activity', attachedTx = null) {
@@ -281,8 +299,8 @@ async function postChatActivity(text, type = 'activity', attachedTx = null) {
     return;
   }
   const db = getDB();
-  await addDoc(collection(db, 'spaces', SPACE.current.id, 'messages'),
-    { ...msg, createdAt: serverTimestamp() });
+  await _addDoc(_collection(db, 'spaces', SPACE.current.id, 'messages'),
+    { ...msg, createdAt: _serverTimestamp() });
 }
 
 function renderChat(msgs) {
@@ -350,7 +368,7 @@ window.generateInviteLink = async function(role = 'member') {
     localStorage.setItem('ap_invite_' + token, JSON.stringify(invite));
   } else {
     const db = await getDBReady();
-    await setDoc(doc(db, 'invites', token), invite);
+    await _setDoc(_doc(db, 'invites', token), invite);
   }
 
   const link = `${location.origin}${location.pathname}?invite=${token}`;
@@ -364,7 +382,7 @@ window.acceptInvite = async function(token) {
     invite = raw ? JSON.parse(raw) : null;
   } else {
     const db = await getDBReady();
-    const snap = await getDoc(doc(db, 'invites', token));
+    const snap = await _getDoc(_doc(db, 'invites', token));
     invite = snap.exists() ? snap.data() : null;
   }
 
@@ -390,13 +408,14 @@ window.acceptInvite = async function(token) {
     }
   } else {
     const db = getDB();
-    await updateDoc(doc(db, 'spaces', invite.spaceId), { [`members.${uid()}`]: invite.role });
-    await updateDoc(doc(db, 'invites', token), { used: true });
-    const userRef = doc(db, 'users', uid(), 'data', 'spaces');
-    const curr = (await getDoc(userRef)).data()?.list || [];
+    await _updateDoc(_doc(db, 'spaces', invite.spaceId), { [`members.${uid()}`]: invite.role });
+    await _updateDoc(_doc(db, 'invites', token), { used: true });
+    const userRef = _doc(db, 'users', uid(), 'data', 'spaces');
+    const snapU = await _getDoc(userRef);
+    const curr = snapU.exists() ? (snapU.data()?.list || []) : [];
     if (!curr.find(s => s.id === invite.spaceId)) {
       curr.push({ id: invite.spaceId, name: invite.spaceName, emoji: invite.spaceEmoji, role: invite.role });
-      await setDoc(userRef, { list: curr });
+      await _setDoc(userRef, { list: curr });
     }
   }
 
@@ -436,7 +455,7 @@ window.saveSpaceData = async function() {
     return;
   }
   const db = getDB();
-  await setDoc(doc(db, 'spaces', SPACE.current.id, 'data', 'metas'), { list: window.metas });
+  await _setDoc(_doc(db, 'spaces', SPACE.current.id, 'data', 'metas'), { list: window.metas });
 };
 
 window.saveSpacePerfil = async function() {
@@ -452,7 +471,7 @@ window.saveSpacePerfil = async function() {
     return;
   }
   const db = getDB();
-  await updateDoc(doc(db, 'spaces', SPACE.current.id), {
+  await _updateDoc(_doc(db, 'spaces', SPACE.current.id), {
     perfilFinanciero: window.PERFIL,
     config: APP_CONFIG,
   });
@@ -554,7 +573,7 @@ window.changeRole = async function(memberId, newRole) {
     if (raw) { const sp=JSON.parse(raw); sp.members[memberId]=newRole; localStorage.setItem('ap_space_'+SPACE.current.id,JSON.stringify(sp)); SPACE.current.members[memberId]=newRole; }
   } else {
     const db = getDB();
-    await updateDoc(doc(db,'spaces',SPACE.current.id), { [`members.${memberId}`]: newRole });
+    await _updateDoc(_doc(db,'spaces',SPACE.current.id), { [`members.${memberId}`]: newRole });
     SPACE.current.members[memberId] = newRole;
   }
   showToast('Rol actualizado ✓','green');
@@ -569,7 +588,7 @@ window.removeMember = async function(memberId) {
     if (raw) { const sp=JSON.parse(raw); delete sp.members[memberId]; localStorage.setItem('ap_space_'+SPACE.current.id,JSON.stringify(sp)); delete SPACE.current.members[memberId]; }
   } else {
     const db = getDB();
-    await updateDoc(doc(db,'spaces',SPACE.current.id), { [`members.${memberId}`]: null });
+    await _updateDoc(_doc(db,'spaces',SPACE.current.id), { [`members.${memberId}`]: null });
     delete SPACE.current.members[memberId];
   }
   showToast('Miembro eliminado','red');
