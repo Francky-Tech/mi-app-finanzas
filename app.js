@@ -6,7 +6,7 @@
 let CURRENT_USER = null;
 let gastos = [], metas = [];
 let PERFIL = defaultPerfil();
-let APP_CONFIG = { tabs: [], limiteOcio: 500000, aiProvider: 'claude' };
+let APP_CONFIG = { tabs: [], limiteOcio: 500000, aiProvider: 'claude', gastosProgramados: [] };
 let chatHistory = [];
 let obHistory   = [];
 let obStep = 0;
@@ -22,9 +22,9 @@ function defaultPerfil() {
     ingresoMensual: 0,
     moneda: 'COP',
     gastosFijos: {},
-    deuda: { saldo: 0, tasa: 0.01546, cuota: 0, manejo: 36000 },
-    cesantias: { hoy: 0, feb2027: 0 },
-    metaApartamento: { valor: 0, fecha: '2027-02' },
+    deudas: [],          // array de deudas: [{id,nombre,saldo,cuota,tasa,manejo}]
+    cesantias: { hoy: 0, fechaObjetivo: '' },
+    metaAhorro: { valor: 0, fecha: '', descripcion: '' },
     objetivos: [],
     contexto: '',
   };
@@ -35,10 +35,11 @@ const ALL_TABS = [
   { id:'dashboard',     label:'📊 Dashboard',       always: true },
   { id:'ai',            label:'🤖 Asesor IA',        always: true },
   { id:'transactions',  label:'💳 Movimientos',      always: true },
-  { id:'deuda',         label:'💳 Deuda TC',         always: false },
+  { id:'deuda',         label:'💳 Deuda',         always: false },
   { id:'plan',          label:'🏠 Plan Apartamento', always: false },
   { id:'reports',       label:'📈 Reportes',         always: false },
   { id:'savings',       label:'🎯 Metas',            always: false },
+  { id:'gastos-prog',   label:'🔄 Gastos prog.',      always: true },
   { id:'settings',      label:'⚙️ Config',           always: true },
 ];
 
@@ -180,29 +181,30 @@ async function finalizarOnboarding() {
   addObMsg('ai', '✨ Perfecto, ya tengo todo lo que necesito. Estoy analizando tu situación y configurando tu app...');
 
   try {
-    const systemPrompt = `Eres un asesor financiero experto en Colombia. Analiza las respuestas de onboarding del usuario y devuelve SOLO un JSON válido con esta estructura exacta (sin texto adicional, sin markdown, sin explicaciones):
+    const systemPrompt = `Eres un asesor financiero experto. Analiza las respuestas de onboarding y devuelve SOLO un JSON válido (sin markdown, sin explicaciones):
 
 {
   "perfil": {
     "ingresoMensual": number,
-    "gastosFijos": { "nombre": number },
-    "deuda": { "saldo": number, "cuota": number, "tasa": 0.01546, "manejo": 36000 },
-    "cesantias": { "hoy": number, "feb2027": 0 },
-    "metaApartamento": { "valor": number, "fecha": "2027-02" },
-    "objetivos": ["objetivo1", "objetivo2"],
-    "contexto": "resumen breve de la situación financiera"
+    "gastosFijos": { "nombre_gasto": number },
+    "deudas": [],
+    "cesantias": { "hoy": number, "fechaObjetivo": "" },
+    "metaAhorro": { "valor": number, "fecha": "", "descripcion": "" },
+    "objetivos": ["objetivo1"],
+    "contexto": "resumen breve"
   },
-  "tabs": ["dashboard", "ai", "transactions", "deuda", "plan", "reports", "savings", "settings"],
-  "mensaje_bienvenida": "mensaje personalizado de 2-3 oraciones",
-  "alertas_iniciales": ["alerta1", "alerta2"],
+  "tabs": ["dashboard", "ai", "transactions", "reports", "savings", "settings"],
+  "mensaje_bienvenida": "mensaje personalizado 2-3 oraciones",
+  "alertas_iniciales": ["alerta1"],
   "ahorro_recomendado": number
 }
 
 Reglas:
-- tabs: incluye SOLO las tabs relevantes para este usuario. Si tiene deuda TC → incluye "deuda". Si tiene meta de apartamento o vivienda → incluye "plan". Siempre incluye dashboard, ai, transactions, settings.
-- Interpreta cantidades escritas en texto (ej: "6 millones" = 6000000, "700 mil" = 700000)
-- Si el usuario no menciona deuda, omite "deuda" de tabs y pon saldo=0
-- Si el usuario no tiene meta de apartamento, omite "plan" de tabs`;
+- Interpreta montos en texto (ej: "2 millones" = 2000000, "500 mil" = 500000)
+- Si menciona deuda → incluir tab "deuda" en tabs
+- Si menciona meta de ahorro grande (casa, carro, viaje) → incluir tab "plan"
+- Siempre incluir: dashboard, ai, transactions, settings
+- NO inventes datos que el usuario no mencionó`;
 
     const userMsg = `Datos del onboarding:
 Ingreso: ${obData.intro}
@@ -307,6 +309,7 @@ function toggleMic() {
 // APP LAUNCH
 // ============================================================
 function launchApp() {
+  verificarGastosProgramados();
   buildNav();
   document.getElementById('appLayer').classList.add('show');
   switchTab('dashboard');
@@ -353,6 +356,7 @@ function switchTab(tab) {
   if (tab==='deuda')        renderDeuda();
   if (tab==='plan')         renderPlan();
   if (tab==='settings')     renderSettings();
+  if (tab==='gastos-prog')  renderGastosProg();
   if (tab==='ai')           initAITab();
 }
 
@@ -440,17 +444,14 @@ function getTabHTML(tab) {
       <div class="card"><div class="sec-hdr"><div class="card-title" style="margin-bottom:0">Movimientos</div><span id="txCount" style="font-size:12px;color:var(--text2)"></span></div><div id="txList"></div></div>`;
 
     case 'deuda': return `
-      <div class="card"><div class="card-title">⚙️ Parámetros Deuda TC</div>
-        <div class="form-grid">
-          <div class="form-group"><label class="form-label">Saldo actual ($)</label><input type="number" id="dSaldo" onchange="recalcDeuda()"></div>
-          <div class="form-group"><label class="form-label">Cuota mensual ($)</label><input type="number" id="dCuota" onchange="recalcDeuda()"></div>
-          <div class="form-group"><label class="form-label">Tasa mensual (%)</label><input type="number" id="dTasa" step="0.001" onchange="recalcDeuda()"></div>
-          <div class="form-group"><label class="form-label">Cuota de manejo ($)</label><input type="number" id="dManejo" onchange="recalcDeuda()"></div>
+      <div class="card">
+        <div class="sec-hdr">
+          <div class="card-title" style="margin-bottom:0">💳 Mis deudas</div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalDeuda()">+ Nueva deuda</button>
         </div>
+        <div id="deudaListado" style="margin-top:12px"></div>
       </div>
-      <div id="deudaRes"></div>
-      <div class="card"><div class="card-title">📋 Amortización mes a mes</div><div style="overflow-x:auto"><table class="amort-t" id="amortT"></table></div></div>
-      <div class="card"><div class="card-title">📊 Escenarios</div><div id="escenarios"></div></div>`;
+      <div id="deudaDetalle"></div>`;
 
     case 'plan': return `
       <div class="card"><div class="card-title">🏠 Parámetros Plan Apartamento</div>
@@ -481,6 +482,20 @@ function getTabHTML(tab) {
     case 'savings': return `
       <div class="sec-hdr"><div class="sec-title">Metas de ahorro</div><button class="btn btn-primary" onclick="openModalMeta()">+ Nueva meta</button></div>
       <div id="metasList"></div>`;
+
+    case 'gastos-prog': return `
+      <div class="card">
+        <div class="sec-hdr">
+          <div class="card-title" style="margin-bottom:0">🔄 Gastos programados</div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalGastoProg()">+ Agregar</button>
+        </div>
+        <p style="font-size:12px;color:var(--text3);margin:8px 0 16px">Se ejecutan automáticamente en la fecha configurada y se registran como movimientos.</p>
+        <div id="gastoProgList"></div>
+      </div>
+      <div class="card" id="gastoProgProxCard" style="display:none">
+        <div class="card-title">📅 Próximas ejecuciones</div>
+        <div id="gastoProgProx"></div>
+      </div>`;
 
     case 'settings': return `
       <div class="card"><div class="card-title">Perfil financiero</div>
@@ -876,13 +891,19 @@ function buildContexto(){
   const egMes=gMes.filter(g=>g.tipo==='gasto').reduce((s,g)=>s+g.monto,0);
   const totalAhorro=metas.reduce((s,m)=>s+m.ahorrado,0);
   const ultTx=[...gastos].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)).slice(0,15).map(g=>`${g.fecha}|${g.tipo==='ingreso'?'+':'-'}${fmt(g.monto)}|${g.categoria}|${g.descripcion}`).join('\n');
+  const totalDeudas = (PERFIL.deudas||[]).reduce((s,d)=>s+d.saldo,0);
+  const totalCuotas = (PERFIL.deudas||[]).reduce((s,d)=>s+d.cuota,0);
+  const gastosFijosTotal = Object.values(PERFIL.gastosFijos||{}).reduce((a,b)=>a+b,0);
+  const gastosProg = (APP_CONFIG.gastosProgramados||[]).filter(g=>g.activo).reduce((s,g)=>s+g.monto,0);
+  const disponible = Math.max(0,(PERFIL.ingresoMensual||0)-gastosFijosTotal-totalCuotas-gastosProg);
   return `USUARIO: ${CURRENT_USER.displayName||''} (${CURRENT_USER.email||''})
 INGRESO MENSUAL NETO: ${fmt(PERFIL.ingresoMensual)}
-GASTOS FIJOS: ${JSON.stringify(PERFIL.gastosFijos)} (Total: ${fmt(Object.values(PERFIL.gastosFijos||{}).reduce((a,b)=>a+b,0))})
-DEUDA TC: saldo=${fmt(PERFIL.deuda?.saldo||0)}, cuota=${fmt(PERFIL.deuda?.cuota||0)}, tasa=${((PERFIL.deuda?.tasa||0.01546)*100).toFixed(3)}%
-CESANTÍAS: hoy=${fmt(PERFIL.cesantias?.hoy||0)}, feb2027=${fmt(PERFIL.cesantias?.feb2027||0)}
-META APARTAMENTO: ${fmt(PERFIL.metaApartamento?.valor||0)} → ${PERFIL.metaApartamento?.fecha||'2027-02'}
-DISPONIBLE MENSUAL ESTIMADO: ${fmt(Math.max(0,(PERFIL.ingresoMensual||0)-Object.values(PERFIL.gastosFijos||{}).reduce((a,b)=>a+b,0)-(PERFIL.deuda?.cuota||0)))}
+GASTOS FIJOS: ${JSON.stringify(PERFIL.gastosFijos)} (Total: ${fmt(gastosFijosTotal)})
+GASTOS PROGRAMADOS ACTIVOS: ${(APP_CONFIG.gastosProgramados||[]).filter(g=>g.activo).map(g=>`${g.nombre}:${fmt(g.monto)}`).join(', ')||'ninguno'}
+DEUDAS: ${(PERFIL.deudas||[]).map(d=>`${d.nombre}: saldo=${fmt(d.saldo)}, cuota=${fmt(d.cuota)}, tasa=${d.tasa}%`).join(' | ')||'ninguna'} (Total cuotas: ${fmt(totalCuotas)})
+CESANTÍAS: ${fmt(PERFIL.cesantias?.hoy||0)}
+META DE AHORRO: ${PERFIL.metaAhorro?.descripcion||'no definida'} → ${fmt(PERFIL.metaAhorro?.valor||0)} (${PERFIL.metaAhorro?.fecha||'sin fecha'})
+DISPONIBLE MENSUAL ESTIMADO: ${fmt(disponible)}
 MES ACTUAL: ingresos=${fmt(ingMes)}, egresos=${fmt(egMes)}, balance=${fmt(ingMes-egMes)}
 METAS ACTIVAS: ${metas.map(m=>`${m.nombre}:${fmt(m.ahorrado)}/${fmt(m.total)}`).join(', ')||'ninguna'}
 TOTAL AHORRADO EN METAS: ${fmt(totalAhorro)}
@@ -897,12 +918,35 @@ async function sendAI(){
   showAITyping();
   try{
     const data = await callAI({
-      system:`Eres un asesor financiero personal experto en Colombia. Tienes acceso a los datos completos del usuario. Da consejos concretos con números exactos. Responde en español. Usa emojis para destacar puntos clave. Máximo 300 palabras. Si ves algo preocupante, dilo directamente.\n\nDATA FINANCIERA:\n${buildContexto()}`,
+      system:`Eres un asesor financiero personal. Tienes acceso a los datos completos del usuario. Da consejos concretos con números exactos. Responde en español. Usa emojis. Máximo 300 palabras.
+
+CAPACIDAD ESPECIAL: Puedes registrar movimientos financieros cuando el usuario lo pida. Cuando detectes una intención de registrar un movimiento (ej: "agrega un gasto", "registra un ingreso", "anota que gasté"), responde con un bloque JSON al FINAL de tu mensaje, así:
+<ACTION>{"tipo":"gasto","monto":200000,"categoria":"comida","descripcion":"Almuerzo","fecha":"HOY"}</ACTION>
+
+Categorías válidas: comida, transporte, servicios, arriendo, ocio, educacion, salud, deportes, deuda, ahorro, familia, mascota, otros, sueldo.
+Si el usuario no especifica fecha, usa "HOY". Si no especifica categoría, infiere la más apropiada.
+Solo incluye el bloque ACTION si el usuario explícitamente pide registrar algo.
+
+DATA FINANCIERA:
+${buildContexto()}`,
       messages:chatHistory.slice(-8),
       max_tokens:1000,
     });
     hideAITyping();
-    if(data.content?.[0]?.text){const r=data.content[0].text;chatHistory.push({role:'assistant',content:r});addAIMsg('assistant',r);}
+    if(data.content?.[0]?.text){
+      let r = data.content[0].text;
+      // Detectar y ejecutar acciones de registro
+      const actionMatch = r.match(/<ACTION>(.*?)<\/ACTION>/s);
+      if (actionMatch) {
+        r = r.replace(/<ACTION>.*?<\/ACTION>/s, '').trim();
+        try {
+          const action = JSON.parse(actionMatch[1]);
+          await ejecutarAccionIA(action);
+        } catch(e) { console.warn('Action parse error:', e); }
+      }
+      chatHistory.push({role:'assistant',content:r});
+      addAIMsg('assistant',r);
+    }
     else addAIMsg('assistant','⚠️ Respuesta inesperada de la IA.');
   }catch(e){hideAITyping();addAIMsg('assistant','⚠️ '+e.message);}
 }
@@ -986,6 +1030,203 @@ async function callAI({ system, messages, max_tokens = 1000 }) {
   }
   return resp.json();
 }
+
+
+
+// ============================================================
+// IA ACTIONS — registrar movimientos desde el chat
+// ============================================================
+async function ejecutarAccionIA(action) {
+  if (!action.tipo || !action.monto) return;
+  const fecha = action.fecha === 'HOY' ? todayStr() : (action.fecha || todayStr());
+  const entry = {
+    id: Date.now(),
+    descripcion: action.descripcion || action.tipo,
+    monto: Math.abs(action.monto),
+    tipo: action.tipo === 'ingreso' ? 'ingreso' : 'gasto',
+    categoria: action.categoria || 'otros',
+    fecha,
+  };
+  gastos.unshift(entry);
+  await saveData();
+  showToast(`✅ IA registró: ${entry.tipo === 'ingreso' ? '+' : '-'}${fmt(entry.monto)} en ${entry.categoria}`, 'green');
+  // Refrescar si el tab de movimientos está activo
+  const activeTab = document.querySelector('.tab-section.active')?.id?.replace('tab-','');
+  if (activeTab === 'transactions') renderTransactions();
+  if (activeTab === 'dashboard') renderDashboard();
+}
+
+
+// ============================================================
+// GASTOS PROGRAMADOS
+// ============================================================
+let gastoProgEditIdx = null;
+
+function renderGastosProg() {
+  const lista = APP_CONFIG.gastosProgramados || [];
+  const el = document.getElementById('gastoProgList');
+  if (!el) return;
+
+  if (!lista.length) {
+    el.innerHTML = '<div class="empty-st"><div class="empty-icon">🔄</div><p>Sin gastos programados</p><p style="font-size:12px;margin-top:6px">Agrega gastos recurrentes como arriendo, suscripciones, etc.</p></div>';
+    document.getElementById('gastoProgProxCard').style.display = 'none';
+    return;
+  }
+
+  const hoy = new Date();
+  el.innerHTML = lista.map((g, i) => {
+    const proxFecha = calcProxEjecucion(g);
+    const diasRestantes = Math.ceil((proxFecha - hoy) / (1000*60*60*24));
+    const urgente = diasRestantes <= 3;
+    return `<div class="meta-card">
+      <div class="meta-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:10px;background:${g.activo?'var(--green-dim)':'var(--border)'};border:1px solid ${g.activo?'rgba(34,197,94,.3)':'var(--border2)'};display:flex;align-items:center;justify-content:center;font-size:18px">${getCatEmoji(g.categoria)}</div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">${esc(g.nombre)}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">${g.frecuencia === 'mensual' ? 'Mensual' : g.frecuencia === 'semanal' ? 'Semanal' : 'Anual'} · día ${g.dia} · ${g.categoria}</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red);font-size:16px">-${fmt(g.monto)}</div>
+          <div style="font-size:11px;color:${urgente?'var(--yellow)':'var(--text3)'};margin-top:2px">${urgente?'⚡ ':''}en ${diasRestantes}d</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:10px;height:10px;border-radius:50%;background:${g.activo?'var(--green)':'var(--text3)'}"></div>
+          <span style="font-size:12px;color:var(--text3)">${g.activo?'Activo':'Pausado'}</span>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-ghost btn-sm" onclick="toggleGastoProg(${i})">${g.activo?'⏸ Pausar':'▶ Activar'}</button>
+          <button class="btn btn-ghost btn-sm" onclick="ejecutarGastoProgManual(${i})">▶ Ejecutar ya</button>
+          <button class="btn btn-ghost btn-sm" onclick="abrirModalGastoProg(${i})">✏️</button>
+          <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="eliminarGastoProg(${i})">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Próximas ejecuciones
+  const prox = lista.filter(g=>g.activo).map(g=>({...g, fecha: calcProxEjecucion(g)}))
+    .sort((a,b)=>a.fecha-b.fecha).slice(0,5);
+  const proxCard = document.getElementById('gastoProgProxCard');
+  const proxEl   = document.getElementById('gastoProgProx');
+  if (proxCard) proxCard.style.display = prox.length ? 'block' : 'none';
+  if (proxEl) {
+    proxEl.innerHTML = prox.map(g => {
+      const dias = Math.ceil((g.fecha - new Date()) / (1000*60*60*24));
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:16px">${getCatEmoji(g.categoria)}</span>
+          <div><div style="font-size:13px;font-weight:500">${esc(g.nombre)}</div><div style="font-size:11px;color:var(--text3)">${g.fecha.toLocaleDateString('es-CO')}</div></div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'DM Mono',monospace;color:var(--red);font-size:13px">-${fmt(g.monto)}</div>
+          <div style="font-size:11px;color:${dias<=3?'var(--yellow)':'var(--text3)'}">${dias <= 0 ? 'Hoy' : `en ${dias}d`}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function calcProxEjecucion(g) {
+  const hoy = new Date();
+  const fecha = new Date(hoy.getFullYear(), hoy.getMonth(), g.dia || 1);
+  if (fecha <= hoy) fecha.setMonth(fecha.getMonth() + 1);
+  return fecha;
+}
+
+function getCatEmoji(cat) {
+  const map = { comida:'🍔', transporte:'🚗', servicios:'💡', arriendo:'🏠', educacion:'📚', salud:'💊', deportes:'⚽', ocio:'🎮', suscripcion:'📱', otros:'💰', deuda:'💳', ahorro:'🎯', familia:'👨‍👩‍👧', mascota:'🐾' };
+  return map[cat] || '💰';
+}
+
+function abrirModalGastoProg(idx = null) {
+  gastoProgEditIdx = idx;
+  const g = idx !== null ? (APP_CONFIG.gastosProgramados||[])[idx] : {};
+  document.getElementById('gpNombre').value    = g.nombre||'';
+  document.getElementById('gpMonto').value     = g.monto||'';
+  document.getElementById('gpCategoria').value = g.categoria||'otros';
+  document.getElementById('gpFrecuencia').value= g.frecuencia||'mensual';
+  document.getElementById('gpDia').value       = g.dia||1;
+  document.getElementById('gpDesc').value      = g.descripcion||'';
+  document.getElementById('modalGastoProg').classList.add('open');
+}
+
+async function guardarGastoProg() {
+  const nombre    = document.getElementById('gpNombre')?.value.trim();
+  const monto     = +document.getElementById('gpMonto')?.value;
+  const categoria = document.getElementById('gpCategoria')?.value;
+  const frecuencia= document.getElementById('gpFrecuencia')?.value;
+  const dia       = +document.getElementById('gpDia')?.value||1;
+  const descripcion= document.getElementById('gpDesc')?.value.trim();
+  if (!nombre||!monto) { showToast('Nombre y monto son obligatorios','red'); return; }
+  if (!APP_CONFIG.gastosProgramados) APP_CONFIG.gastosProgramados = [];
+  const gasto = { id: Date.now(), nombre, monto, categoria, frecuencia, dia, descripcion, activo: true, ultimaEjecucion: null };
+  if (gastoProgEditIdx !== null) {
+    gasto.activo = APP_CONFIG.gastosProgramados[gastoProgEditIdx].activo;
+    APP_CONFIG.gastosProgramados[gastoProgEditIdx] = gasto;
+  } else {
+    APP_CONFIG.gastosProgramados.push(gasto);
+  }
+  await window._db.saveConfig(CURRENT_USER.uid, APP_CONFIG);
+  document.getElementById('modalGastoProg').classList.remove('open');
+  showToast(gastoProgEditIdx!==null?'Gasto actualizado ✓':'Gasto programado agregado ✓','green');
+  renderGastosProg();
+}
+
+async function toggleGastoProg(idx) {
+  APP_CONFIG.gastosProgramados[idx].activo = !APP_CONFIG.gastosProgramados[idx].activo;
+  await window._db.saveConfig(CURRENT_USER.uid, APP_CONFIG);
+  renderGastosProg();
+}
+
+async function eliminarGastoProg(idx) {
+  if (!confirm('¿Eliminar este gasto programado?')) return;
+  APP_CONFIG.gastosProgramados.splice(idx, 1);
+  await window._db.saveConfig(CURRENT_USER.uid, APP_CONFIG);
+  showToast('Eliminado','red');
+  renderGastosProg();
+}
+
+async function ejecutarGastoProgManual(idx) {
+  const g = APP_CONFIG.gastosProgramados[idx];
+  if (!g) return;
+  if (!confirm(`¿Registrar "${g.nombre}" (${fmt(g.monto)}) como movimiento ahora?`)) return;
+  const entry = {
+    descripcion: g.nombre + (g.descripcion ? ' — '+g.descripcion : ''),
+    monto: g.monto, tipo: 'gasto',
+    categoria: g.categoria, fecha: todayStr(),
+  };
+  gastos.unshift({ ...entry, id: Date.now() });
+  APP_CONFIG.gastosProgramados[idx].ultimaEjecucion = todayStr();
+  await Promise.all([saveData(), window._db.saveConfig(CURRENT_USER.uid, APP_CONFIG)]);
+  showToast(`"${g.nombre}" registrado ✓`, 'green');
+  renderGastosProg();
+}
+
+// Verificar gastos pendientes al abrir la app
+function verificarGastosProgramados() {
+  const lista = APP_CONFIG.gastosProgramados || [];
+  const hoy = new Date();
+  const pendientes = lista.filter(g => {
+    if (!g.activo) return false;
+    const prox = calcProxEjecucion(g);
+    const diasRestantes = Math.ceil((prox - hoy) / (1000*60*60*24));
+    // Si ya pasó el día de ejecución este mes y no se ejecutó hoy
+    const diaHoy = hoy.getDate();
+    const ultimaEjec = g.ultimaEjecucion ? new Date(g.ultimaEjecucion) : null;
+    const yaEjecutadoEsteMes = ultimaEjec && ultimaEjec.getMonth() === hoy.getMonth() && ultimaEjec.getFullYear() === hoy.getFullYear();
+    return diaHoy >= g.dia && !yaEjecutadoEsteMes;
+  });
+  if (pendientes.length > 0) {
+    setTimeout(() => {
+      showToast(`${pendientes.length} gasto(s) programado(s) pendiente(s) de ejecutar`, 'yellow');
+    }, 2000);
+  }
+}
+
 
 // ============================================================
 // UTILITIES

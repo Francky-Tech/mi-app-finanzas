@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#080c0a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Ahorrapp Pro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -540,19 +543,11 @@
   </style>
 <script>
   function showAuth() {
-    document.getElementById('landingPage').style.display = 'none';
+    document.getElementById('landingPage').style.display='none';
     document.getElementById('authLayer').classList.remove('hide');
   }
-  function lOpenModal(type) {
-    var id = 'l' + type.charAt(0).toUpperCase() + type.slice(1) + 'Modal';
-    var el = document.getElementById(id);
-    if (el) el.classList.add('open');
-  }
-  function lCloseModal(type) {
-    var id = 'l' + type.charAt(0).toUpperCase() + type.slice(1) + 'Modal';
-    var el = document.getElementById(id);
-    if (el) el.classList.remove('open');
-  }
+  function lOpenModal(t) { var e=document.getElementById('l'+t[0].toUpperCase()+t.slice(1)+'Modal'); if(e)e.classList.add('open'); }
+  function lCloseModal(t) { var e=document.getElementById('l'+t[0].toUpperCase()+t.slice(1)+'Modal'); if(e)e.classList.remove('open'); }
 </script>
 </head>
 <body>
@@ -805,6 +800,7 @@
     </div>
     <div class="h-right">
       <div class="ai-badge"><div class="ai-dot"></div>IA Activa</div>
+      <button id="btnInstalar" onclick="instalarApp()" style="display:none;font-size:11px;padding:5px 12px;background:var(--green);color:#051209;border:none;border-radius:99px;cursor:pointer;font-weight:700;font-family:'Syne',sans-serif">⬇ Instalar</button>
       <div class="user-chip" onclick="openUserMenu()">
         <div class="u-av" id="uAvatar">?</div>
         <span class="u-name" id="uName">...</span>
@@ -861,6 +857,50 @@
   </div>
 </div>
 
+
+<div class="modal-overlay" id="modalDeuda">
+  <div class="modal">
+    <div class="modal-title">💳 Agregar deuda</div>
+    <div class="form-group" style="margin-bottom:12px"><label class="form-label">Nombre</label><input type="text" id="dNombre" placeholder="Ej: Tarjeta Visa"></div>
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="form-group"><label class="form-label">Saldo actual ($)</label><input type="number" id="dSaldo"></div>
+      <div class="form-group"><label class="form-label">Cuota mensual ($)</label><input type="number" id="dCuota"></div>
+    </div>
+    <div class="form-grid" style="margin-bottom:18px">
+      <div class="form-group"><label class="form-label">Tasa mensual (%)</label><input type="number" id="dTasa" step="0.001" placeholder="1.5"></div>
+      <div class="form-group"><label class="form-label">Cuota de manejo ($)</label><input type="number" id="dManejo" value="0"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="guardarDeuda()">Guardar</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('modalDeuda').classList.remove('open')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalGastoProg">
+  <div class="modal">
+    <div class="modal-title">🔄 Gasto programado</div>
+    <div class="form-group" style="margin-bottom:12px"><label class="form-label">Nombre</label><input type="text" id="gpNombre" placeholder="Ej: Netflix, Arriendo..."></div>
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="form-group"><label class="form-label">Monto ($)</label><input type="number" id="gpMonto"></div>
+      <div class="form-group"><label class="form-label">Categoría</label>
+        <select id="gpCategoria"><option value="arriendo">Arriendo</option><option value="servicios">Servicios</option><option value="comida">Comida</option><option value="transporte">Transporte</option><option value="salud">Salud</option><option value="educacion">Educación</option><option value="suscripcion">Suscripción</option><option value="deportes">Deportes</option><option value="deuda">Deuda/TC</option><option value="familia">Familia</option><option value="mascota">Mascota</option><option value="otros" selected>Otros</option></select>
+      </div>
+    </div>
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="form-group"><label class="form-label">Frecuencia</label>
+        <select id="gpFrecuencia"><option value="mensual">Mensual</option><option value="semanal">Semanal</option><option value="anual">Anual</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Día del mes</label><input type="number" id="gpDia" min="1" max="31" value="1"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:18px"><label class="form-label">Descripción (opcional)</label><input type="text" id="gpDesc"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="guardarGastoProg()">Guardar</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('modalGastoProg').classList.remove('open')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- Scripts -->
@@ -905,15 +945,10 @@ window._db = {
 window._dbSpaces = { db, collection, addDoc, getDocs, onSnapshot, query, orderBy,
   limit, serverTimestamp, deleteDoc, updateDoc, setDoc, getDoc, doc };
 
-// Espera a que app.js cargue
 async function waitForApp() {
-  let r = 25;
-  while (typeof window._onUserReady !== 'function' && r-- > 0) {
-    await new Promise(res => setTimeout(res, 200));
-  }
-  if (typeof window._onUserReady !== 'function') throw new Error('app.js no cargó. Recarga la página.');
+  let r=25; while(typeof window._onUserReady!=='function'&&r-->0) await new Promise(x=>setTimeout(x,200));
+  if(typeof window._onUserReady!=='function') throw new Error('app.js no cargó. Recarga la página.');
 }
-
 window.doLogin = async () => {
   const email=document.getElementById('loginEmail').value.trim();
   const pass=document.getElementById('loginPass').value;
@@ -961,15 +996,12 @@ window.doLogout = async () => {
 };
 
 onAuthStateChanged(auth, async user => {
-  if (user && !window.CURRENT_USER) {
-    await waitForApp();
-    window._onUserReady({uid:user.uid,email:user.email,displayName:user.displayName});
-  }
+  if(user&&!window.CURRENT_USER){await waitForApp();window._onUserReady({uid:user.uid,email:user.email,displayName:user.displayName});}
 });
 </script>
 
 <script>
-// ── LANDING LOGIC ── (showAuth definida en head)
+// ── LANDING LOGIC ── (showAuth en head)
 
 // Orbe Three.js
 (function initOrb() {
@@ -1051,12 +1083,27 @@ let lTouchX = 0;
 document.getElementById('lSlidesTrack')?.addEventListener('touchstart', e => lTouchX = e.touches[0].clientX);
 document.getElementById('lSlidesTrack')?.addEventListener('touchend', e => { const d = lTouchX - e.changedTouches[0].clientX; if(Math.abs(d)>50) lMoveSlide(d>0?1:-1); });
 
-// Modals landing (definidas en head)
+// Modals landing (en head)
 document.querySelectorAll('.l-modal-overlay').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); }));
 </script>
 
 <script src="app.js"></script>
 <script type="module" src="spaces.js"></script>
 <script type="module" src="spaces-ui.js"></script>
+<script src="app.js"></script>
+<script type="module" src="spaces.js"></script>
+<script type="module" src="spaces-ui.js"></script>
+<script>
+// PWA Install
+let _dProm=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();_dProm=e;const b=document.getElementById('btnInstalar');if(b)b.style.display='inline-block';});
+window.instalarApp=async function(){
+  if(!_dProm){showToast&&showToast('Menú del navegador → "Agregar a pantalla de inicio"','blue');return;}
+  _dProm.prompt();const{outcome}=await _dProm.userChoice;
+  if(outcome==='accepted')showToast&&showToast('¡App instalada! 🎉','green');
+  _dProm=null;document.getElementById('btnInstalar').style.display='none';
+};
+window.addEventListener('appinstalled',()=>{showToast&&showToast('Ahorrapp Pro instalada ✓','green');});
+</script>
 </body>
 </html>
