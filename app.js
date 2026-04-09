@@ -48,6 +48,8 @@ const ALL_TABS = [
 // ============================================================
 window._onUserReady = async function(user) {
   CURRENT_USER = user;
+  window.CURRENT_USER = user;   // exponer globalmente para spaces.js
+  window._currentUser = user;   // alias de seguridad
   document.getElementById('authLayer').classList.add('hide');
 
   // Cargar datos del usuario

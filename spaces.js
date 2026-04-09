@@ -63,8 +63,15 @@ window.SPACE = {
 // ══════════════════════════════════════════
 // HELPERS
 // ══════════════════════════════════════════
-function uid()   { return window.CURRENT_USER?.uid; }
-function uname() { return window.CURRENT_USER?.displayName || window.CURRENT_USER?.email?.split('@')[0] || 'Yo'; }
+function uid() {
+  const u = window.CURRENT_USER || window._currentUser;
+  if (!u?.uid) console.warn('[spaces] CURRENT_USER no disponible aún');
+  return u?.uid;
+}
+function uname() {
+  const u = window.CURRENT_USER || window._currentUser;
+  return u?.displayName || u?.email?.split('@')[0] || 'Yo';
+}
 function uavatar(){ return (uname()).charAt(0).toUpperCase(); }
 
 const ROLES_ORDER = ['owner','admin','member','viewer'];
@@ -80,11 +87,17 @@ function demoSaveList(key, v) { localStorage.setItem(key, JSON.stringify(v)); }
 // CRUD ESPACIOS
 // ══════════════════════════════════════════
 window.createSpace = async function(name, emoji = '💰') {
+  const currentUid = uid();
+  if (!currentUid) {
+    showToast('Error: sesión no iniciada. Recarga la página.', 'red');
+    console.error('[spaces] uid() undefined en createSpace - CURRENT_USER:', window.CURRENT_USER);
+    return null;
+  }
   const id = 'sp_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
   const space = {
     id, name, emoji,
-    createdBy: uid(),
-    members: { [uid()]: 'owner' },
+    createdBy: currentUid,
+    members: { [currentUid]: 'owner' },
     config: { tabs: APP_CONFIG?.tabs || [], limiteOcio: APP_CONFIG?.limiteOcio || 500000 },
     perfilFinanciero: { ...window.PERFIL },
     createdAt: new Date().toISOString(),
