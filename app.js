@@ -48,8 +48,8 @@ const ALL_TABS = [
 // ============================================================
 window._onUserReady = async function(user) {
   CURRENT_USER = user;
-  window.CURRENT_USER = user;   // exponer globalmente para spaces.js
-  window._currentUser = user;   // alias de seguridad
+  window.CURRENT_USER = user;   // exponer para módulos ES (spaces.js)
+  window._currentUser  = user;  // alias de seguridad
   document.getElementById('authLayer').classList.add('hide');
 
   // Cargar datos del usuario
@@ -311,6 +311,11 @@ function toggleMic() {
 // APP LAUNCH
 // ============================================================
 function launchApp() {
+  // Exponer en window para que spaces.js (módulo ES) pueda accederlas
+  window.PERFIL      = PERFIL;
+  window.APP_CONFIG  = APP_CONFIG;
+  window.gastos      = gastos;
+  window.metas       = metas;
   verificarGastosProgramados();
   buildNav();
   document.getElementById('appLayer').classList.add('show');
@@ -1078,6 +1083,9 @@ function closeUserMenu(){ document.getElementById('userMenu').classList.remove('
 // ============================================================
 async function saveData(){
   if(!CURRENT_USER)return;
+  // Mantener window.gastos y window.metas sincronizados
+  window.gastos = gastos;
+  window.metas  = metas;
   await Promise.all([
     window._db.saveGastos(CURRENT_USER.uid, gastos),
     window._db.saveMetas(CURRENT_USER.uid, metas),
@@ -1335,6 +1343,17 @@ function verificarGastosProgramados() {
 // ============================================================
 // UTILITIES
 // ============================================================
+function showToast(msg, type = 'green', duration = 3000) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'toast' + (type !== 'green' ? ' toast-' + type : '');
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), duration);
+}
+window.showToast = showToast;
+
 function fmt(n){ return '$'+Number(n||0).toLocaleString('es-CO'); }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function todayStr(){ return new Date().toISOString().split('T')[0]; }
@@ -1344,6 +1363,19 @@ function getVal(id){ return document.getElementById(id)?.value||''; }
 function setVal(id,v){ const el=document.getElementById(id);if(el)el.value=v; }
 function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
 function catColor(c){ return{ocio:'#ff4f6d',comida:'#00e5a0',transporte:'#4f8eff',servicios:'#9d6eff',educacion:'#ffcc44',salud:'#22e5f5',deportes:'#fb923c',sueldo:'#00e5a0',arriendo:'#f97316',deuda:'#ff4f6d',ahorro:'#4f8eff',familia:'#ec4899',mascota:'#a78bfa',otros:'#8892c4'}[c]||'#8892c4'; }
+
+// Exponer funciones globales para módulos ES (spaces.js, spaces-ui.js)
+window.fmt              = fmt;
+window.esc              = esc;
+window.buildNav         = buildNav;
+window.switchTab        = switchTab;
+window.renderDashboard  = renderDashboard;
+window.renderTransactions = renderTransactions;
+window.renderReports    = renderReports;
+window.renderSavings    = renderSavings;
+window.saveData         = saveData;
+window.todayStr         = todayStr;
+window.catColor         = catColor;
 
 // Modal close on outside click
 window.addEventListener('click',e=>{
