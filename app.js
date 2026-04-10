@@ -36,11 +36,9 @@ const ALL_TABS = [
   { id:'ai',            label:'🤖 Asesor IA',        always: true },
   { id:'transactions',  label:'💳 Movimientos',      always: true },
   { id:'deuda',         label:'💳 Deuda',         always: false },
-  { id:'plan',          label:'🏠 Plan Apartamento', always: false },
   { id:'reports',       label:'📈 Reportes',         always: false },
   { id:'savings',       label:'🎯 Metas',            always: false },
   { id:'gastos-prog',   label:'🔄 Gastos prog.',      always: true },
-  { id:'settings',      label:'⚙️ Config',           always: true },
 ];
 
 // ============================================================
@@ -48,8 +46,8 @@ const ALL_TABS = [
 // ============================================================
 window._onUserReady = async function(user) {
   CURRENT_USER = user;
-  window.CURRENT_USER = user;   // exponer para módulos ES (spaces.js)
-  window._currentUser  = user;  // alias de seguridad
+  window.CURRENT_USER = user;
+  window._currentUser  = user;
   document.getElementById('authLayer').classList.add('hide');
 
   // Cargar datos del usuario
@@ -259,7 +257,7 @@ Nombre del usuario: ${CURRENT_USER.displayName || 'Usuario'}`;
     console.warn('Onboarding IA error:', e);
     addObMsg('ai', 'Tuve un pequeño problema al conectarme, pero no hay problema — voy a configurar tu app con los datos que me diste. ¡Ya casi estamos!');
     // Configuración manual básica
-    APP_CONFIG.tabs = ['dashboard','ai','transactions','gastos-prog','savings','settings'];
+    APP_CONFIG.tabs = ['dashboard','ai','transactions','gastos-prog','savings'];
     if (PERFIL.deudas?.length > 0) APP_CONFIG.tabs.splice(3,0,'deuda');
     await delay(1500);
   }
@@ -270,7 +268,7 @@ Nombre del usuario: ${CURRENT_USER.displayName || 'Usuario'}`;
 
 function skipOnboarding() {
   document.getElementById('onboardLayer').classList.remove('show');
-  APP_CONFIG.tabs = ['dashboard','ai','transactions','gastos-prog','savings','settings'];
+  APP_CONFIG.tabs = ['dashboard','ai','transactions','gastos-prog','savings'];
   launchApp();
 }
 
@@ -311,7 +309,6 @@ function toggleMic() {
 // APP LAUNCH
 // ============================================================
 function launchApp() {
-  // Exponer en window para que spaces.js (módulo ES) pueda accederlas
   window.PERFIL      = PERFIL;
   window.APP_CONFIG  = APP_CONFIG;
   window.gastos      = gastos;
@@ -554,14 +551,18 @@ function renderDashboard() {
   const eg   = gMes.filter(g=>g.tipo==='gasto').reduce((s,g)=>s+g.monto,0);
   const bal  = gastos.reduce((a,g)=>g.tipo==='ingreso'?a+g.monto:a-g.monto,0);
   const totalAhorro = metas.reduce((s,m)=>s+m.ahorrado,0);
-  const disponible  = (PERFIL.ingresoMensual||0) - Object.values(PERFIL.gastosFijos||{}).reduce((a,b)=>a+b,0) - (PERFIL.deuda?.cuota||0);
+  const _gastosFijosTotal = Object.values(PERFIL.gastosFijos||{}).reduce((a,b)=>a+b,0);
+  const _totalCuotas      = (PERFIL.deudas||[]).reduce((s,d)=>s+(d.cuota||0),0);
+  const _gastosProg       = (APP_CONFIG.gastosProgramados||[]).filter(g=>g.activo).reduce((s,g)=>s+(g.monto||0),0);
+  const disponible        = (PERFIL.ingresoMensual||0) - _gastosFijosTotal - _totalCuotas - _gastosProg;
 
   setText('stBalance', fmt(bal), bal>=0?'var(--green)':'var(--red)');
   setText('stIng',     fmt(ing));
   setText('stEg',      fmt(eg));
   setText('stDisp',    fmt(disponible>0?disponible:0), disponible>=0?'var(--green)':'var(--red)');
   setText('stAhorro',  fmt(totalAhorro));
-  if (PERFIL.deuda?.saldo > 0) setText('stDeuda', fmt(PERFIL.deuda.saldo), 'var(--red)');
+  const _saldoTotal = (PERFIL.deudas||[]).reduce((s,d)=>s+(d.saldo||0),0);
+  if (_saldoTotal > 0) setText('stDeuda', fmt(_saldoTotal), 'var(--red)');
   else setText('stDeuda', '✓ Sin deuda', 'var(--green)');
 
   renderAlertas();
@@ -597,7 +598,12 @@ function renderAlertas() {
   const gMes = gastos.filter(g=>g.fecha?.startsWith(mes));
   const ocio = gMes.filter(g=>g.categoria==='ocio'&&g.tipo==='gasto').reduce((s,g)=>s+g.monto,0);
 
-  if (PERFIL.deuda?.saldo > 0) alertas.push({ tipo:'danger', ico:'💳', t:`Deuda activa: ${fmt(PERFIL.deuda.saldo)}`, d:`Paga ${fmt(PERFIL.deuda.cuota||0)}/mes. Cada mes en intereses: ~${fmt(Math.round((PERFIL.deuda.saldo||0)*0.01546))}.` });
+  const _deudas = PERFIL.deudas||[];
+  if (_deudas.length > 0) {
+    const _totalSaldo = _deudas.reduce((s,d)=>s+(d.saldo||0),0);
+    const _totalCuota = _deudas.reduce((s,d)=>s+(d.cuota||0),0);
+    alertas.push({ tipo:'danger', ico:'💳', t:`Deuda activa: ${fmt(_totalSaldo)}`, d:`Pagas ${fmt(_totalCuota)}/mes en cuotas. Tienes ${_deudas.length} deuda${_deudas.length>1?'s':''} registrada${_deudas.length>1?'s':''}.` });
+  }
   if (ocio > (APP_CONFIG.limiteOcio||500000)) alertas.push({ tipo:'warning', ico:'⚠️', t:'Límite de ocio superado', d:`Gastaste ${fmt(ocio)} en ocio este mes (límite: ${fmt(APP_CONFIG.limiteOcio||500000)}).` });
   const ahorroMes = gMes.filter(g=>g.categoria==='ahorro').reduce((s,g)=>s+g.monto,0);
   if (ahorroMes>0) alertas.push({ tipo:'success', ico:'✅', t:`Ahorraste ${fmt(ahorroMes)} este mes`, d:'¡Vas bien! Sigue así.' });
@@ -1075,7 +1081,24 @@ function clearChat(){chatHistory=[];const c=document.getElementById('aiMsgs');if
 // ============================================================
 // USER MENU
 // ============================================================
-function openUserMenu(){ document.getElementById('userMenu').classList.add('open'); }
+function openUserMenu(){
+  document.getElementById('userMenu').classList.add('open');
+  // Inyectar config en el user menu
+  const cfgEl = document.getElementById('userMenuConfig');
+  if (cfgEl) {
+    setVal('cfgIngreso', PERFIL.ingresoMensual||0);
+    setVal('cfgOcio', APP_CONFIG.limiteOcio||500000);
+    setVal('cfgAiProvider', APP_CONFIG.aiProvider||'claude');
+    const badge = document.getElementById('aiProviderBadge');
+    if(badge){ const p=APP_CONFIG.aiProvider||'claude'; badge.innerHTML = p==='claude'?'✅ <strong>Claude Sonnet 4</strong>':'✅ <strong>GPT-4o</strong> (OpenAI)'; }
+    const gf=document.getElementById('cfgGastosFijos');
+    if(gf&&Object.keys(PERFIL.gastosFijos||{}).length){
+      gf.innerHTML='<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Gastos fijos</div>'+
+        Object.entries(PERFIL.gastosFijos).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px"><span style="color:var(--text2)">${k}</span><span style="font-family:'DM Mono',monospace;color:var(--red)">-${fmt(v)}</span></div>`).join('')+
+        `<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;font-weight:600"><span>Total</span><span style="font-family:'DM Mono',monospace;color:var(--red)">-${fmt(Object.values(PERFIL.gastosFijos).reduce((a,b)=>a+b,0))}</span></div>`;
+    }
+  }
+}
 function closeUserMenu(){ document.getElementById('userMenu').classList.remove('open'); }
 
 // ============================================================
@@ -1083,7 +1106,6 @@ function closeUserMenu(){ document.getElementById('userMenu').classList.remove('
 // ============================================================
 async function saveData(){
   if(!CURRENT_USER)return;
-  // Mantener window.gastos y window.metas sincronizados
   window.gastos = gastos;
   window.metas  = metas;
   await Promise.all([
@@ -1343,14 +1365,16 @@ function verificarGastosProgramados() {
 // ============================================================
 // UTILITIES
 // ============================================================
-function showToast(msg, type = 'green', duration = 3000) {
+function showToast(msg, type, duration) {
+  type = type || 'green';
+  duration = duration || 3000;
   const el = document.getElementById('toast');
   if (!el) return;
   el.textContent = msg;
   el.className = 'toast' + (type !== 'green' ? ' toast-' + type : '');
   el.classList.add('show');
   clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove('show'), duration);
+  el._t = setTimeout(function() { el.classList.remove('show'); }, duration);
 }
 window.showToast = showToast;
 
@@ -1364,18 +1388,18 @@ function setVal(id,v){ const el=document.getElementById(id);if(el)el.value=v; }
 function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
 function catColor(c){ return{ocio:'#ff4f6d',comida:'#00e5a0',transporte:'#4f8eff',servicios:'#9d6eff',educacion:'#ffcc44',salud:'#22e5f5',deportes:'#fb923c',sueldo:'#00e5a0',arriendo:'#f97316',deuda:'#ff4f6d',ahorro:'#4f8eff',familia:'#ec4899',mascota:'#a78bfa',otros:'#8892c4'}[c]||'#8892c4'; }
 
-// Exponer funciones globales para módulos ES (spaces.js, spaces-ui.js)
-window.fmt              = fmt;
-window.esc              = esc;
-window.buildNav         = buildNav;
-window.switchTab        = switchTab;
-window.renderDashboard  = renderDashboard;
+// Exponer funciones para módulos ES
+window.fmt               = fmt;
+window.esc               = esc;
+window.buildNav          = buildNav;
+window.switchTab         = switchTab;
+window.renderDashboard   = renderDashboard;
 window.renderTransactions = renderTransactions;
-window.renderReports    = renderReports;
-window.renderSavings    = renderSavings;
-window.saveData         = saveData;
-window.todayStr         = todayStr;
-window.catColor         = catColor;
+window.renderReports     = renderReports;
+window.renderSavings     = renderSavings;
+window.saveData          = saveData;
+window.todayStr          = todayStr;
+window.catColor          = catColor;
 
 // Modal close on outside click
 window.addEventListener('click',e=>{

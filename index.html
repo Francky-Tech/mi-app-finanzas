@@ -51,6 +51,8 @@
 
     html{scroll-behavior:smooth}
     body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;overflow-x:hidden}
+    body.landing-mode{overflow:hidden;height:100vh}
+    body.app-mode{overflow-x:hidden}
     ::-webkit-scrollbar{width:4px;height:4px}
     ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
 
@@ -684,6 +686,8 @@
   function showAuth(mode) {
     document.getElementById('landingPage').style.display='none';
     document.getElementById('authLayer').classList.remove('hide');
+    document.body.classList.remove('landing-mode');
+    document.body.classList.add('app-mode');
     // Por defecto "Empezar gratis" → registro; "Ingresar" → login
     if (mode === 'login') {
       document.getElementById('loginCard').style.display='block';
@@ -696,12 +700,14 @@
   function hideAuth() {
     document.getElementById('authLayer').classList.add('hide');
     document.getElementById('landingPage').style.display='block';
+    document.body.classList.add('landing-mode');
+    document.body.classList.remove('app-mode');
   }
   function lOpenModal(t) { var e=document.getElementById('l'+t[0].toUpperCase()+t.slice(1)+'Modal'); if(e)e.classList.add('open'); }
   function lCloseModal(t) { var e=document.getElementById('l'+t[0].toUpperCase()+t.slice(1)+'Modal'); if(e)e.classList.remove('open'); }
 </script>
 </head>
-<body>
+<body class="landing-mode">
 
 <!-- ══════════ LANDING ══════════ -->
 <div id="landingPage">
@@ -1010,15 +1016,53 @@
 </div>
 
 <div class="modal-overlay" id="userMenu">
-  <div class="modal" style="max-width:320px">
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
-      <div class="u-av" style="width:44px;height:44px;font-size:18px" id="umAv">?</div>
-      <div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800" id="umName">...</div><div style="font-size:12px;color:var(--text2)" id="umEmail">...</div></div>
+  <div class="modal" style="max-width:400px;max-height:85vh;overflow-y:auto">
+    <!-- Header usuario -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="u-av" style="width:44px;height:44px;font-size:18px" id="umAv">?</div>
+        <div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800" id="umName">...</div><div style="font-size:12px;color:var(--text2)" id="umEmail">...</div></div>
+      </div>
+      <button class="btn-icon" onclick="closeUserMenu()">✕</button>
     </div>
-    <button class="btn btn-ghost" style="width:100%;margin-bottom:8px" onclick="rerunOnboarding()">🤖 Re-configurar con IA</button>
-    <button class="btn btn-ghost" style="width:100%;margin-bottom:8px" onclick="exportJSON()">⬇ Backup JSON</button>
-    <button class="btn btn-danger" style="width:100%" onclick="doLogout()">Salir</button>
-    <div style="text-align:center;margin-top:12px"><button class="btn-icon" onclick="closeUserMenu()">Cerrar</button></div>
+
+    <!-- Acciones rápidas -->
+    <div style="display:flex;gap:8px;margin-bottom:20px">
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="rerunOnboarding()">🤖 Re-configurar</button>
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="exportJSON()">⬇ Backup</button>
+    </div>
+
+    <hr class="div">
+
+    <!-- Configuración inline -->
+    <div id="userMenuConfig">
+      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:14px;color:var(--text)">⚙️ Configuración</div>
+      <div class="form-grid" style="margin-bottom:12px">
+        <div class="form-group"><label class="form-label">Ingreso mensual ($)</label><input type="number" id="cfgIngreso" onchange="saveConfig()"></div>
+        <div class="form-group"><label class="form-label">Límite ocio ($)</label><input type="number" id="cfgOcio" onchange="saveConfig()"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="form-label">Motor de IA</label>
+        <select id="cfgAiProvider" onchange="saveConfig()">
+          <option value="claude">🟣 Claude (Anthropic)</option>
+          <option value="openai">🟢 ChatGPT (OpenAI)</option>
+        </select>
+      </div>
+      <div id="aiProviderBadge" style="font-size:11px;color:var(--text3);margin-bottom:12px"></div>
+      <div id="cfgGastosFijos"></div>
+    </div>
+
+    <hr class="div">
+
+    <!-- Datos -->
+    <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text)">💾 Datos</div>
+    <div class="btn-row" style="margin-bottom:20px">
+      <button class="btn btn-ghost btn-sm" onclick="importJSON()">⬆ Importar</button>
+      <button class="btn btn-success btn-sm" onclick="exportCSV()">⬇ CSV</button>
+    </div>
+    <input type="file" id="impFile" accept=".json" onchange="importJSONFile(event)" style="display:none">
+
+    <button class="btn btn-danger" style="width:100%" onclick="doLogout()">🚪 Cerrar sesión</button>
   </div>
 </div>
 
@@ -1268,5 +1312,34 @@ document.querySelectorAll('.l-modal-overlay').forEach(m => m.addEventListener('c
 <script src="app.js"></script>
 <script type="module" src="spaces.js"></script>
 <script type="module" src="spaces-ui.js"></script>
+<script>
+// Liberar scroll cuando la app inicia
+const _origLaunchApp = window.launchApp;
+window.launchApp = function() {
+  document.body.classList.remove('landing-mode');
+  document.body.classList.add('app-mode');
+  document.getElementById('landingPage').style.display = 'none';
+  if (_origLaunchApp) _origLaunchApp.apply(this, arguments);
+};
+
+// PWA install
+let _dProm = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); _dProm = e;
+  const b = document.getElementById('btnInstalar');
+  if (b) b.style.display = 'inline-block';
+});
+window.instalarApp = async function() {
+  if (!_dProm) { window.showToast && window.showToast('Menú del navegador → "Agregar a pantalla de inicio"','blue'); return; }
+  _dProm.prompt();
+  const { outcome } = await _dProm.userChoice;
+  if (outcome === 'accepted') window.showToast && window.showToast('¡App instalada! 🎉','green');
+  _dProm = null;
+  document.getElementById('btnInstalar').style.display = 'none';
+};
+window.addEventListener('appinstalled', () => {
+  window.showToast && window.showToast('Ahorrapp Pro instalada ✓','green');
+});
+</script>
 </body>
 </html>
