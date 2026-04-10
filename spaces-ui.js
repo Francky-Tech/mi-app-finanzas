@@ -1,13 +1,7 @@
 // ============================================================
 // spaces-ui.js — Tabs y UI para espacios compartidos
 // ============================================================
-// Helpers via window para evitar problemas de scope en módulos ES
-const showToast = (...a) => window.showToast?.(...a);
-const fmt  = (...a) => window.fmt?.(...a)  || '$0';
-const esc  = (...a) => window.esc?.(...a)  || String(a[0]||'');
-const buildNav  = (...a) => window.buildNav?.(...a);
-const switchTab = (...a) => window.switchTab?.(...a);
-const todayStr  = () => window.todayStr?.() || new Date().toISOString().split('T')[0];
+// helpers via window — llamadas directas abajo
 
 // ══════════════════════════════════════════
 // NAV: añadir tabs de espacio
@@ -33,7 +27,7 @@ window.buildNav = function() {
     const el = document.createElement('div');
     el.className = 'nav-tab';
     el.dataset.tab = t.id;
-    el.onclick = () => switchTab(t.id);
+    el.onclick = () => window.switchTab(t.id);
     el.innerHTML = t.label + (t.badge ? ` <span id="${t.badge}" style="display:none;background:var(--red);color:#fff;font-size:10px;font-weight:600;padding:1px 5px;border-radius:99px;min-width:16px;text-align:center">●</span>` : '');
     nav.appendChild(el);
   });
@@ -53,7 +47,7 @@ const _origSwitchTab = window.switchTab;
 window.switchTab = function(tab) {
   _origSwitchTab?.(tab);
   if (tab === 'team')           renderTeamTab();
-  if (tab === 'chat')           { renderChat(); focusChatInput(); }
+  if (tab === 'chat')           { window.renderChat(); focusChatInput(); }
   if (tab === 'shared-reports') renderSharedReports();
 };
 
@@ -105,10 +99,10 @@ function renderTeamTab() {
         return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
           <div style="width:28px;height:28px;border-radius:50%;background:${isMe?'var(--green)':'var(--s3)'};color:${isMe?'#051209':'var(--text)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">${av}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:500">${esc(g.descripcion)}</div>
+            <div style="font-size:12px;font-weight:500">${window.esc(g.descripcion)}</div>
             <div style="font-size:11px;color:var(--text2);font-family:'DM Mono',monospace">${g.fecha} · ${g.categoria} · <strong>${isMe?'Tú':author}</strong></div>
           </div>
-          <div style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace;color:${color}">${g.tipo==='ingreso'?'+':'−'}${fmt(g.monto)}</div>
+          <div style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace;color:${color}">${g.tipo==='ingreso'?'+':'−'}${window.fmt(g.monto)}</div>
         </div>`;
       }).join('');
     }
@@ -136,9 +130,9 @@ function renderTeamTab() {
         <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
           <span style="display:flex;align-items:center;gap:6px">
             <span style="width:8px;height:8px;border-radius:50%;background:${isMe?'var(--blue)':'var(--green)'};display:inline-block"></span>
-            ${esc(name)}${isMe?' <span style="font-size:10px;color:var(--text3)">(tú)</span>':''}
+            ${window.esc(name)}${isMe?' <span style="font-size:10px;color:var(--text3)">(tú)</span>':''}
           </span>
-          <span style="font-family:'DM Mono',monospace">${fmt(amt)} <span style="color:var(--text3)">(${pct}%)</span></span>
+          <span style="font-family:'DM Mono',monospace">${window.fmt(amt)} <span style="color:var(--text3)">(${pct}%)</span></span>
         </div>
         <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${isMe?'var(--blue)':'var(--green)'}"></div></div>
       </div>`;
@@ -222,10 +216,10 @@ function renderSharedReports() {
   const bal = ing - eg;
   const ahorroTotal = (window.metas||[]).reduce((s,m)=>s+m.ahorrado,0);
 
-  setText('srIng',    fmt(ing));
-  setText('srEg',     fmt(eg));
-  setText('srBal',    fmt(bal), bal>=0?'var(--green)':'var(--red)');
-  setText('srAhorro', fmt(ahorroTotal));
+  setText('srIng',    window.fmt(ing));
+  setText('srEg',     window.fmt(eg));
+  setText('srBal',    window.fmt(bal), bal>=0?'var(--green)':'var(--red)');
+  setText('srAhorro', window.fmt(ahorroTotal));
 
   // Cat chart
   const cats = {};
@@ -237,7 +231,7 @@ function renderSharedReports() {
       type: 'doughnut',
       data: { labels: Object.keys(cats), datasets: [{ data: Object.values(cats), backgroundColor: Object.keys(cats).map(catColor), borderWidth:0, hoverOffset:6 }] },
       options: { responsive:true, maintainAspectRatio:false, cutout:'60%',
-        plugins: { legend:{position:'bottom',labels:{color:'#8892c4',font:{size:11},padding:10}}, tooltip:{callbacks:{label:c=>' '+fmt(c.raw)}} } }
+        plugins: { legend:{position:'bottom',labels:{color:'#8892c4',font:{size:11},padding:10}}, tooltip:{callbacks:{label:c=>' '+window.fmt(c.raw)}} } }
     });
   }
 
@@ -258,11 +252,11 @@ function renderSharedReports() {
       <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
         <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">${data.avatar}</div>
         <div style="flex:1">
-          <div style="font-size:13px;font-weight:500;margin-bottom:4px">${esc(name)}</div>
+          <div style="font-size:13px;font-weight:500;margin-bottom:4px">${window.esc(name)}</div>
           <div style="display:flex;gap:12px;font-size:11px;font-family:'DM Mono',monospace">
-            <span style="color:var(--green)">+${fmt(data.ing)}</span>
-            <span style="color:var(--red)">-${fmt(data.eg)}</span>
-            <span style="color:${data.ing-data.eg>=0?'var(--green)':'var(--red)'}">= ${fmt(data.ing-data.eg)}</span>
+            <span style="color:var(--green)">+${window.fmt(data.ing)}</span>
+            <span style="color:var(--red)">-${window.fmt(data.eg)}</span>
+            <span style="color:${data.ing-data.eg>=0?'var(--green)':'var(--red)'}">= ${window.fmt(data.ing-data.eg)}</span>
           </div>
         </div>
       </div>`).join('');
@@ -285,7 +279,7 @@ window.aiTeamAnalysis = async function(prompt) {
 
     const data = await callAI({
       max_tokens: 600,
-      messages:[{ role:'user', content:`Eres asesor financiero de un equipo/pareja en Colombia. Analiza estos datos y responde: "${prompt}"\n\nDATA:\nEspacio: ${SPACE.current?.name}\nMiembros: ${members}\nIngresos totales: ${fmt(ing)}\nEgresos totales: ${fmt(eg)}\nBalance: ${fmt(ing-eg)}\nGastos por categoría: ${JSON.stringify(cats)}\nAportes por miembro: ${JSON.stringify(byMember)}\n\nResponde en español, máximo 200 palabras, con emojis y recomendaciones concretas.` }]
+      messages:[{ role:'user', content:`Eres asesor financiero de un equipo/pareja en Colombia. Analiza estos datos y responde: "${prompt}"\n\nDATA:\nEspacio: ${SPACE.current?.name}\nMiembros: ${members}\nIngresos totales: ${window.fmt(ing)}\nEgresos totales: ${window.fmt(eg)}\nBalance: ${window.fmt(ing-eg)}\nGastos por categoría: ${JSON.stringify(cats)}\nAportes por miembro: ${JSON.stringify(byMember)}\n\nResponde en español, máximo 200 palabras, con emojis y recomendaciones concretas.` }]
     });
     const text = data.content?.[0]?.text || 'No se pudo obtener el análisis.';
     el.innerHTML = `<div style="background:rgba(79,142,255,.07);border:1px solid rgba(79,142,255,.15);border-radius:10px;padding:14px;font-size:13px;line-height:1.65;color:var(--text)">${text.replace(/\n/g,'<br>')}</div>`;
@@ -300,23 +294,23 @@ window.aiTeamAnalysis = async function(prompt) {
 const _origAddTx = window.addTx;
 window.addTx = async function() {
   if (!SPACE.current) { return _origAddTx?.(); }
-  if (!canWrite(SPACE.myRole)) { showToast('No tienes permisos para escribir en este espacio', 'red'); return; }
+  if (!canWrite(SPACE.myRole)) { window.showToast('No tienes permisos para escribir en este espacio', 'red'); return; }
 
   const desc  = document.getElementById('txDesc')?.value.trim();
   const monto = +document.getElementById('txMonto')?.value;
   const tipo  = document.getElementById('txTipo')?.value;
   const cat   = document.getElementById('txCat')?.value;
   const fecha = document.getElementById('txFecha')?.value;
-  if (!desc||!monto||monto<=0||!tipo||!cat||!fecha){ showToast('Completa todos los campos','red'); return; }
+  if (!desc||!monto||monto<=0||!tipo||!cat||!fecha){ window.showToast('Completa todos los campos','red'); return; }
 
   const entry = { descripcion:desc, monto, tipo, categoria:cat, fecha };
   await addSpaceTx(entry);
 
   // Reset form
   ['txDesc','txMonto','txTipo','txCat'].forEach(id => { const el=document.getElementById(id); if(el)el.value=''; });
-  const fd = document.getElementById('txFecha'); if(fd) fd.value = todayStr();
+  const fd = document.getElementById('txFecha'); if(fd) fd.value = window.todayStr();
 
-  showToast('Movimiento agregado al espacio ✓','green');
+  window.showToast('Movimiento agregado al espacio ✓','green');
   applyFilters?.();
 };
 
@@ -406,7 +400,7 @@ window.selectEmoji = function(e) {
 window.doCreateSpace = async function() {
   const name  = document.getElementById('newSpaceName')?.value.trim();
   const emoji = document.getElementById('selectedEmoji')?.value || '💰';
-  if (!name) { showToast('Ponle un nombre al espacio','red'); return; }
+  if (!name) { window.showToast('Ponle un nombre al espacio','red'); return; }
   closeCreateSpaceModal();
   await createSpace(name, emoji);
   // Refresh space list in menu
@@ -421,7 +415,7 @@ window.refreshSpaceList = async function() {
   el.innerHTML = spaces.map(s => `
     <div onclick="loadSpaceFromMenu('${s.id}')" style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;background:${SPACE.current?.id===s.id?'var(--green-dim)':'var(--s2)'};border:1px solid ${SPACE.current?.id===s.id?'rgba(34,197,94,.3)':'var(--border)'};margin-bottom:5px;transition:all .15s">
       <span style="font-size:16px">${s.emoji||'💰'}</span>
-      <div style="flex:1"><div style="font-size:13px;font-weight:500">${esc(s.name)}</div><div style="font-size:11px;color:var(--text3)">${s.role}</div></div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:500">${window.esc(s.name)}</div><div style="font-size:11px;color:var(--text3)">${s.role}</div></div>
       ${SPACE.current?.id===s.id?'<span style="font-size:10px;color:var(--green)">activo</span>':''}
     </div>`).join('');
 };
@@ -430,10 +424,10 @@ window.loadSpaceFromMenu = async function(id) {
   window.closeUserMenu?.();
   try {
     const ok = await window.loadSpace?.(id);
-    if (!ok) showToast('No se pudo cargar el espacio. Intenta de nuevo.', 'red');
+    if (!ok) window.showToast('No se pudo cargar el espacio. Intenta de nuevo.', 'red');
   } catch(e) {
     console.error('loadSpace error:', e);
-    showToast('Error: ' + e.message, 'red');
+    window.showToast('Error: ' + e.message, 'red');
   }
 };
 
