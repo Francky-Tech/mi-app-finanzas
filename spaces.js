@@ -1,6 +1,15 @@
 // ============================================================
 // spaces.js — Motor de Espacios Compartidos
 // ============================================================
+// Helpers globales — se usan via window para evitar problemas de scope en módulos ES
+const showToast = (...a) => showToast(...a);
+const fmt  = (...a) => window.fmt?.(...a)  || '$0';
+const esc  = (...a) => window.esc?.(...a)  || String(a[0]||'');
+const buildNav    = (...a) => window.buildNav?.(...a);
+const switchTab   = (...a) => window.switchTab?.(...a);
+const renderDashboard    = () => window.renderDashboard?.();
+const renderTransactions = () => window.renderTransactions?.();
+const renderReports      = () => window.renderReports?.();
 
 import { getFirestore, doc, setDoc, getDoc, collection,
          addDoc, getDocs, onSnapshot, query, orderBy,
@@ -134,7 +143,9 @@ window.loadSpace = async function(spaceId) {
   SPACE.current = spaceData;
   SPACE.myRole  = spaceData.members?.[uid()] || null;
   if (spaceData.config?.tabs?.length) window.APP_CONFIG.tabs = spaceData.config.tabs;
-  if (spaceData.perfilFinanciero) Object.assign(window.PERFIL, spaceData.perfilFinanciero);
+  if (spaceData.perfilFinanciero && typeof spaceData.perfilFinanciero === 'object') {
+    try { Object.assign(window.PERFIL, spaceData.perfilFinanciero); } catch(e) { console.warn('perfilFinanciero merge error:', e); }
+  }
 
   await loadSpaceTx(spaceId);
   subscribeSpaceChat(spaceId);

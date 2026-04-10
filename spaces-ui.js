@@ -1,7 +1,13 @@
 // ============================================================
 // spaces-ui.js — Tabs y UI para espacios compartidos
-// Se carga después de spaces.js
 // ============================================================
+// Helpers via window para evitar problemas de scope en módulos ES
+const showToast = (...a) => window.showToast?.(...a);
+const fmt  = (...a) => window.fmt?.(...a)  || '$0';
+const esc  = (...a) => window.esc?.(...a)  || String(a[0]||'');
+const buildNav  = (...a) => window.buildNav?.(...a);
+const switchTab = (...a) => window.switchTab?.(...a);
+const todayStr  = () => window.todayStr?.() || new Date().toISOString().split('T')[0];
 
 // ══════════════════════════════════════════
 // NAV: añadir tabs de espacio
@@ -421,13 +427,13 @@ window.refreshSpaceList = async function() {
 };
 
 window.loadSpaceFromMenu = async function(id) {
-  closeUserMenu?.();
+  window.closeUserMenu?.();
   try {
-    const ok = await loadSpace(id);
+    const ok = await window.loadSpace?.(id);
     if (!ok) showToast('No se pudo cargar el espacio. Intenta de nuevo.', 'red');
   } catch(e) {
     console.error('loadSpace error:', e);
-    showToast('Error al cargar el espacio: ' + e.message, 'red');
+    showToast('Error: ' + e.message, 'red');
   }
 };
 
