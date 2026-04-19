@@ -6,26 +6,7 @@
 let CURRENT_USER = null;
 let gastos = [], metas = [];
 let PERFIL = defaultPerfil();
-// Categorías por defecto — cada usuario las puede personalizar
-const DEFAULT_CATEGORIES = [
-  { id: 'sueldo',     nombre: 'Sueldo',     emoji: '💼', color: '#00e5a0', tipo: 'ingreso' },
-  { id: 'freelance',  nombre: 'Freelance',  emoji: '💻', color: '#4f8eff', tipo: 'ingreso' },
-  { id: 'comida',     nombre: 'Comida',     emoji: '🍔', color: '#00e5a0', tipo: 'gasto' },
-  { id: 'transporte', nombre: 'Transporte', emoji: '🚗', color: '#4f8eff', tipo: 'gasto' },
-  { id: 'servicios',  nombre: 'Servicios',  emoji: '💡', color: '#9d6eff', tipo: 'gasto' },
-  { id: 'arriendo',   nombre: 'Arriendo',   emoji: '🏠', color: '#f97316', tipo: 'gasto' },
-  { id: 'salud',      nombre: 'Salud',      emoji: '💊', color: '#22e5f5', tipo: 'gasto' },
-  { id: 'educacion',  nombre: 'Educación',  emoji: '📚', color: '#ffcc44', tipo: 'gasto' },
-  { id: 'ocio',       nombre: 'Ocio',       emoji: '🎮', color: '#ff4f6d', tipo: 'gasto' },
-  { id: 'deportes',   nombre: 'Deportes',   emoji: '⚽', color: '#fb923c', tipo: 'gasto' },
-  { id: 'deuda',      nombre: 'Deuda/TC',   emoji: '💳', color: '#ff4f6d', tipo: 'gasto' },
-  { id: 'ahorro',     nombre: 'Ahorro',     emoji: '🎯', color: '#4f8eff', tipo: 'gasto' },
-  { id: 'familia',    nombre: 'Familia',    emoji: '👨‍👩‍👧', color: '#ec4899', tipo: 'gasto' },
-  { id: 'mascota',    nombre: 'Mascota',    emoji: '🐾', color: '#a78bfa', tipo: 'gasto' },
-  { id: 'otros',      nombre: 'Otros',      emoji: '💰', color: '#8892c4', tipo: 'gasto' },
-];
-
-let APP_CONFIG = { tabs: [], limiteOcio: 500000, aiProvider: 'claude', gastosProgramados: [], categorias: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)) };
+let APP_CONFIG = { tabs: [], limiteOcio: 500000, aiProvider: 'claude', gastosProgramados: [] };
 let chatHistory = [];
 let obHistory   = [];
 let obStep = 0;
@@ -55,11 +36,9 @@ const ALL_TABS = [
   { id:'ai',            label:'🤖 Asesor IA',        always: true },
   { id:'transactions',  label:'💳 Movimientos',      always: true },
   { id:'deuda',         label:'💳 Deuda',         always: false },
-  { id:'plan',          label:'🏠 Plan Apartamento', always: false },
   { id:'reports',       label:'📈 Reportes',         always: false },
   { id:'savings',       label:'🎯 Metas',            always: false },
   { id:'gastos-prog',   label:'🔄 Gastos prog.',      always: true },
-  { id:'settings',      label:'⚙️ Config',           always: true },
 ];
 
 // ============================================================
@@ -334,6 +313,10 @@ function launchApp() {
   window.APP_CONFIG  = APP_CONFIG;
   window.gastos      = gastos;
   window.metas       = metas;
+  document.body.classList.remove('landing-mode');
+  document.body.classList.add('app-mode');
+  const lp = document.getElementById('landingPage');
+  if (lp) lp.style.display = 'none';
   verificarGastosProgramados();
   buildNav();
   document.getElementById('appLayer').classList.add('show');
@@ -383,7 +366,6 @@ function switchTab(tab) {
   if (tab==='reports')      renderReports();
   if (tab==='savings')      renderSavings();
   if (tab==='deuda')        renderDeuda();
-  if (tab==='plan')         renderPlan();
   if (tab==='settings')     renderSettings();
   if (tab==='gastos-prog')  renderGastosProg();
   if (tab==='ai')           initAITab();
@@ -443,7 +425,12 @@ function getTabHTML(tab) {
           <div class="form-group"><label class="form-label">Tipo</label>
             <select id="txTipo"><option value="">Seleccionar...</option><option value="ingreso">Ingreso</option><option value="gasto">Egreso</option></select></div>
           <div class="form-group"><label class="form-label">Categoría</label>
-            <select id="txCat">${buildCategoriaOptions(true)}</select></div>
+            <select id="txCat"><option value="">Seleccionar...</option>
+              <option value="sueldo">Sueldo</option><option value="comida">Comida</option><option value="transporte">Transporte</option>
+              <option value="servicios">Servicios</option><option value="arriendo">Arriendo</option><option value="deuda">Deuda/TC</option>
+              <option value="ahorro">Ahorro</option><option value="educacion">Educación</option><option value="salud">Salud</option>
+              <option value="familia">Familia</option><option value="mascota">Mascota</option><option value="ocio">Ocio</option>
+              <option value="otros">Otros</option></select></div>
         </div>
         <div class="btn-row">
           <button class="btn btn-primary" id="btnGuardar" onclick="addTx()">+ Agregar</button>
@@ -454,7 +441,12 @@ function getTabHTML(tab) {
         <div class="form-grid">
           <div class="form-group"><label class="form-label">Fecha</label><input type="date" id="filtFecha" onchange="applyFilters()"></div>
           <div class="form-group"><label class="form-label">Categoría</label>
-            <select id="filtCat" onchange="applyFilters()">${buildCategoriaOptions('Todas')}</select></div>
+            <select id="filtCat" onchange="applyFilters()"><option value="">Todas</option>
+              <option value="sueldo">Sueldo</option><option value="comida">Comida</option><option value="transporte">Transporte</option>
+              <option value="servicios">Servicios</option><option value="arriendo">Arriendo</option><option value="deuda">Deuda/TC</option>
+              <option value="ahorro">Ahorro</option><option value="educacion">Educación</option><option value="salud">Salud</option>
+              <option value="familia">Familia</option><option value="mascota">Mascota</option><option value="ocio">Ocio</option>
+              <option value="otros">Otros</option></select></div>
           <div class="form-group"><label class="form-label">Tipo</label>
             <select id="filtTipo" onchange="applyFilters()"><option value="">Todos</option><option value="ingreso">Ingresos</option><option value="gasto">Egresos</option></select></div>
         </div>
@@ -562,14 +554,18 @@ function renderDashboard() {
   const eg   = gMes.filter(g=>g.tipo==='gasto').reduce((s,g)=>s+g.monto,0);
   const bal  = gastos.reduce((a,g)=>g.tipo==='ingreso'?a+g.monto:a-g.monto,0);
   const totalAhorro = metas.reduce((s,m)=>s+m.ahorrado,0);
-  const disponible  = (PERFIL.ingresoMensual||0) - Object.values(PERFIL.gastosFijos||{}).reduce((a,b)=>a+b,0) - (PERFIL.deuda?.cuota||0);
+  const _gastosFijosT = Object.values(PERFIL.gastosFijos||{}).reduce((a,b)=>a+b,0);
+  const _totalCuotas  = (PERFIL.deudas||[]).reduce((s,d)=>s+(d.cuota||0),0);
+  const _gastosProgT  = (APP_CONFIG.gastosProgramados||[]).filter(g=>g.activo).reduce((s,g)=>s+(g.monto||0),0);
+  const disponible    = (PERFIL.ingresoMensual||0) - _gastosFijosT - _totalCuotas - _gastosProgT;
 
   setText('stBalance', fmt(bal), bal>=0?'var(--green)':'var(--red)');
   setText('stIng',     fmt(ing));
   setText('stEg',      fmt(eg));
   setText('stDisp',    fmt(disponible>0?disponible:0), disponible>=0?'var(--green)':'var(--red)');
   setText('stAhorro',  fmt(totalAhorro));
-  if (PERFIL.deuda?.saldo > 0) setText('stDeuda', fmt(PERFIL.deuda.saldo), 'var(--red)');
+  const _saldoTot = (PERFIL.deudas||[]).reduce((s,d)=>s+(d.saldo||0),0);
+  if (_saldoTot > 0) setText('stDeuda', fmt(_saldoTot), 'var(--red)');
   else setText('stDeuda', '✓ Sin deuda', 'var(--green)');
 
   renderAlertas();
@@ -605,7 +601,12 @@ function renderAlertas() {
   const gMes = gastos.filter(g=>g.fecha?.startsWith(mes));
   const ocio = gMes.filter(g=>g.categoria==='ocio'&&g.tipo==='gasto').reduce((s,g)=>s+g.monto,0);
 
-  if (PERFIL.deuda?.saldo > 0) alertas.push({ tipo:'danger', ico:'💳', t:`Deuda activa: ${fmt(PERFIL.deuda.saldo)}`, d:`Paga ${fmt(PERFIL.deuda.cuota||0)}/mes. Cada mes en intereses: ~${fmt(Math.round((PERFIL.deuda.saldo||0)*0.01546))}.` });
+  const _deudasArr = PERFIL.deudas||[];
+  if (_deudasArr.length > 0) {
+    const _saldoT = _deudasArr.reduce((s,d)=>s+(d.saldo||0),0);
+    const _cuotaT = _deudasArr.reduce((s,d)=>s+(d.cuota||0),0);
+    alertas.push({ tipo:'danger', ico:'💳', t:`Deuda activa: ${fmt(_saldoT)}`, d:`Pagas ${fmt(_cuotaT)}/mes en ${_deudasArr.length} deuda${_deudasArr.length>1?'s':''}.` });
+  }
   if (ocio > (APP_CONFIG.limiteOcio||500000)) alertas.push({ tipo:'warning', ico:'⚠️', t:'Límite de ocio superado', d:`Gastaste ${fmt(ocio)} en ocio este mes (límite: ${fmt(APP_CONFIG.limiteOcio||500000)}).` });
   const ahorroMes = gMes.filter(g=>g.categoria==='ahorro').reduce((s,g)=>s+g.monto,0);
   if (ahorroMes>0) alertas.push({ tipo:'success', ico:'✅', t:`Ahorraste ${fmt(ahorroMes)} este mes`, d:'¡Vas bien! Sigue así.' });
@@ -1083,7 +1084,23 @@ function clearChat(){chatHistory=[];const c=document.getElementById('aiMsgs');if
 // ============================================================
 // USER MENU
 // ============================================================
-function openUserMenu(){ document.getElementById('userMenu').classList.add('open'); }
+function openUserMenu(){
+  document.getElementById('userMenu').classList.add('open');
+  const cfgEl = document.getElementById('userMenuConfig');
+  if (cfgEl) {
+    setVal('cfgIngreso', PERFIL.ingresoMensual||0);
+    setVal('cfgOcio', APP_CONFIG.limiteOcio||500000);
+    setVal('cfgAiProvider', APP_CONFIG.aiProvider||'claude');
+    const badge = document.getElementById('aiProviderBadge');
+    if (badge) { const p=APP_CONFIG.aiProvider||'claude'; badge.innerHTML = p==='claude'?'✅ <strong>Claude Sonnet 4</strong>':'✅ <strong>GPT-4o</strong>'; }
+    const gf = document.getElementById('cfgGastosFijos');
+    if (gf && Object.keys(PERFIL.gastosFijos||{}).length) {
+      gf.innerHTML = '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px">Gastos fijos</div>' +
+        Object.entries(PERFIL.gastosFijos).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px"><span style="color:var(--text2)">${k}</span><span style="font-family:'DM Mono',monospace;color:var(--red)">-${fmt(v)}</span></div>`).join('') +
+        `<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;font-weight:600"><span>Total</span><span style="font-family:'DM Mono',monospace;color:var(--red)">-${fmt(Object.values(PERFIL.gastosFijos).reduce((a,b)=>a+b,0))}</span></div>`;
+    } else if (gf) { gf.innerHTML = ''; }
+  }
+}
 function closeUserMenu(){ document.getElementById('userMenu').classList.remove('open'); }
 
 // ============================================================
@@ -1256,7 +1273,10 @@ function calcProxEjecucion(g) {
   return fecha;
 }
 
-function getCatEmoji(cat) { return getCategoriaInfo(cat).emoji || '💰'; }
+function getCatEmoji(cat) {
+  const map = { comida:'🍔', transporte:'🚗', servicios:'💡', arriendo:'🏠', educacion:'📚', salud:'💊', deportes:'⚽', ocio:'🎮', suscripcion:'📱', otros:'💰', deuda:'💳', ahorro:'🎯', familia:'👨‍👩‍👧', mascota:'🐾' };
+  return map[cat] || '💰';
+}
 
 function abrirModalGastoProg(idx = null) {
   gastoProgEditIdx = idx;
@@ -1344,119 +1364,6 @@ function verificarGastosProgramados() {
 }
 
 
-
-// ============================================================
-// CATEGORÍAS — helpers y gestión
-// ============================================================
-function getCategorias() {
-  return (APP_CONFIG.categorias && APP_CONFIG.categorias.length) ? APP_CONFIG.categorias : DEFAULT_CATEGORIES;
-}
-function getCategoriaInfo(id) {
-  return getCategorias().find(c => c.id === id) || { id, nombre: id, emoji: '💰', color: '#8892c4', tipo: 'gasto' };
-}
-function buildCategoriaOptions(firstLabel, filterTipo) {
-  const cats = getCategorias();
-  let html = firstLabel ? '<option value="">' + (firstLabel === true ? 'Seleccionar...' : firstLabel) + '</option>' : '';
-  const filtered = filterTipo ? cats.filter(c => c.tipo === filterTipo || c.tipo === 'ambos') : cats;
-  html += filtered.map(c => `<option value="${c.id}">${c.emoji} ${c.nombre}</option>`).join('');
-  return html;
-}
-window.getCategorias    = getCategorias;
-window.getCategoriaInfo = getCategoriaInfo;
-window.buildCategoriaOptions = buildCategoriaOptions;
-
-let catEditIdx = null;
-
-function abrirGestorCategorias() {
-  document.getElementById('userMenu')?.classList.remove('open');
-  document.getElementById('modalCategorias')?.classList.add('open');
-  renderListaCategorias();
-}
-function cerrarGestorCategorias() {
-  document.getElementById('modalCategorias')?.classList.remove('open');
-}
-
-function renderListaCategorias() {
-  const cats = getCategorias();
-  const el = document.getElementById('listaCategorias');
-  if (!el) return;
-  el.innerHTML = cats.map((c, i) => `
-    <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--s2);border:1px solid var(--border);border-radius:10px;margin-bottom:8px">
-      <div style="width:36px;height:36px;border-radius:10px;background:${c.color}20;border:1px solid ${c.color}40;display:flex;align-items:center;justify-content:center;font-size:18px">${c.emoji}</div>
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:600">${esc(c.nombre)}</div>
-        <div style="font-size:11px;color:var(--text3)">${c.tipo === 'ingreso' ? '📈 Ingreso' : c.tipo === 'ambos' ? '↕ Ambos' : '📉 Gasto'}</div>
-      </div>
-      <button class="btn-icon" onclick="editarCategoria(${i})" style="font-size:12px">✏️</button>
-      <button class="btn-icon" onclick="eliminarCategoria(${i})" style="font-size:12px;color:var(--red)">🗑</button>
-    </div>
-  `).join('');
-}
-
-function abrirModalCategoria(idx) {
-  catEditIdx = (idx !== undefined && idx !== null) ? idx : null;
-  const c = catEditIdx !== null ? getCategorias()[catEditIdx] : { nombre:'', emoji:'💰', color:'#8892c4', tipo:'gasto' };
-  setVal('catNombre', c.nombre);
-  setVal('catEmoji', c.emoji);
-  setVal('catColor', c.color);
-  setVal('catTipo', c.tipo);
-  document.getElementById('modalCategoriaEdit')?.classList.add('open');
-}
-function editarCategoria(idx) { abrirModalCategoria(idx); }
-
-async function guardarCategoria() {
-  const nombre = getVal('catNombre').trim();
-  const emoji  = getVal('catEmoji').trim() || '💰';
-  const color  = getVal('catColor') || '#8892c4';
-  const tipo   = getVal('catTipo') || 'gasto';
-  if (!nombre) { showToast('El nombre es requerido', 'red'); return; }
-  if (!APP_CONFIG.categorias) APP_CONFIG.categorias = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-  if (catEditIdx !== null) {
-    APP_CONFIG.categorias[catEditIdx] = { ...APP_CONFIG.categorias[catEditIdx], nombre, emoji, color, tipo };
-  } else {
-    const id = nombre.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '') + '_' + Date.now().toString(36).slice(-4);
-    APP_CONFIG.categorias.push({ id, nombre, emoji, color, tipo });
-  }
-  await window._db.saveConfig(CURRENT_USER.uid, APP_CONFIG);
-  document.getElementById('modalCategoriaEdit')?.classList.remove('open');
-  showToast(catEditIdx !== null ? 'Categoría actualizada ✓' : 'Categoría agregada ✓', 'green');
-  renderListaCategorias();
-  const activeTab = document.querySelector('.tab-section.active')?.id?.replace('tab-','');
-  if (activeTab === 'transactions') { const sec = document.getElementById('tab-transactions'); if (sec) sec.remove(); switchTab('transactions'); }
-}
-
-async function eliminarCategoria(idx) {
-  const cat = getCategorias()[idx];
-  if (!cat) return;
-  const usada = gastos.some(g => g.categoria === cat.id);
-  const msg = usada
-    ? `Hay movimientos con esta categoría. Si la eliminas seguirán mostrando "${cat.nombre}" pero no podrás seleccionarla de nuevo. ¿Continuar?`
-    : `¿Eliminar "${cat.nombre}"?`;
-  if (!confirm(msg)) return;
-  if (!APP_CONFIG.categorias) APP_CONFIG.categorias = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-  APP_CONFIG.categorias.splice(idx, 1);
-  await window._db.saveConfig(CURRENT_USER.uid, APP_CONFIG);
-  showToast('Categoría eliminada', 'red');
-  renderListaCategorias();
-}
-
-async function restaurarCategoriasDefault() {
-  if (!confirm('¿Restaurar las 15 categorías por defecto? Perderás las personalizaciones.')) return;
-  APP_CONFIG.categorias = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-  await window._db.saveConfig(CURRENT_USER.uid, APP_CONFIG);
-  showToast('Categorías restauradas ✓', 'green');
-  renderListaCategorias();
-}
-
-window.abrirGestorCategorias = abrirGestorCategorias;
-window.cerrarGestorCategorias = cerrarGestorCategorias;
-window.abrirModalCategoria   = abrirModalCategoria;
-window.editarCategoria       = editarCategoria;
-window.guardarCategoria      = guardarCategoria;
-window.eliminarCategoria     = eliminarCategoria;
-window.restaurarCategoriasDefault = restaurarCategoriasDefault;
-
-
 // ============================================================
 // UTILITIES
 // ============================================================
@@ -1481,22 +1388,25 @@ function setText(id,t,c){ const el=document.getElementById(id);if(!el)return;el.
 function getVal(id){ return document.getElementById(id)?.value||''; }
 function setVal(id,v){ const el=document.getElementById(id);if(el)el.value=v; }
 function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
-function catColor(c){ const info = getCategoriaInfo(c); return info.color || '#8892c4'; }
+function catColor(c){ return{ocio:'#ff4f6d',comida:'#00e5a0',transporte:'#4f8eff',servicios:'#9d6eff',educacion:'#ffcc44',salud:'#22e5f5',deportes:'#fb923c',sueldo:'#00e5a0',arriendo:'#f97316',deuda:'#ff4f6d',ahorro:'#4f8eff',familia:'#ec4899',mascota:'#a78bfa',otros:'#8892c4'}[c]||'#8892c4'; }
 
-// Exponer funciones para módulos ES
-window.fmt               = fmt;
-window.esc               = esc;
-window.buildNav          = buildNav;
-window.switchTab         = switchTab;
-window.renderDashboard   = renderDashboard;
+// Exponer funciones para módulos ES (spaces.js)
+window.fmt              = fmt;
+window.esc              = esc;
+window.buildNav         = buildNav;
+window.switchTab        = switchTab;
+window.renderDashboard  = renderDashboard;
 window.renderTransactions = renderTransactions;
-window.renderReports     = renderReports;
-window.renderSavings     = renderSavings;
-window.saveData          = saveData;
-window.todayStr          = todayStr;
-window.catColor          = catColor;
+window.renderReports    = renderReports;
+window.renderSavings    = renderSavings;
+window.saveData         = saveData;
+window.todayStr         = todayStr;
+window.catColor         = catColor;
 
 // Modal close on outside click
 window.addEventListener('click',e=>{
-  ['modalMeta','modalAbonar','userMenu'].forEach(id=>{const el=document.getElementById(id);if(el&&e.target===el)el.classList.remove('open');});
+  ['modalMeta','modalAbonar','userMenu','modalDeuda','modalGastoProg'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el && e.target === el) el.classList.remove('open');
+  });
 });

@@ -51,6 +51,9 @@
 
     html{scroll-behavior:smooth}
     body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;overflow-x:hidden}
+    body.landing-mode{overflow:hidden;height:100vh}
+    body.app-mode{overflow-x:hidden}
+    @keyframes splashSpin{to{transform:rotate(360deg)}}
     ::-webkit-scrollbar{width:4px;height:4px}
     ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
 
@@ -684,6 +687,8 @@
   function showAuth(mode) {
     document.getElementById('landingPage').style.display='none';
     document.getElementById('authLayer').classList.remove('hide');
+    document.body.classList.remove('landing-mode');
+    document.body.classList.add('app-mode');
     // Por defecto "Empezar gratis" → registro; "Ingresar" → login
     if (mode === 'login') {
       document.getElementById('loginCard').style.display='block';
@@ -696,20 +701,20 @@
   function hideAuth() {
     document.getElementById('authLayer').classList.add('hide');
     document.getElementById('landingPage').style.display='block';
+    document.body.classList.add('landing-mode');
+    document.body.classList.remove('app-mode');
   }
   function lOpenModal(t) { var e=document.getElementById('l'+t[0].toUpperCase()+t.slice(1)+'Modal'); if(e)e.classList.add('open'); }
   function lCloseModal(t) { var e=document.getElementById('l'+t[0].toUpperCase()+t.slice(1)+'Modal'); if(e)e.classList.remove('open'); }
 </script>
 </head>
-<body>
+<body class="landing-mode">
 
-<!-- Splash loader — visible mientras Firebase verifica la sesión -->
+<!-- Splash loader — cubre todo mientras Firebase verifica sesión -->
 <div id="splashLoader" style="position:fixed;inset:0;z-index:10000;background:#080c0a;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px">
   <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:28px;color:#22c55e;letter-spacing:-.5px">Ahorrapp<span style="color:#f0f7f2"> Pro</span></div>
   <div style="width:32px;height:32px;border:2px solid rgba(34,197,94,.2);border-top-color:#22c55e;border-radius:50%;animation:splashSpin 0.8s linear infinite"></div>
 </div>
-<style>@keyframes splashSpin{to{transform:rotate(360deg)}}</style>
-
 
 <!-- ══════════ LANDING ══════════ -->
 <div id="landingPage">
@@ -1018,16 +1023,44 @@
 </div>
 
 <div class="modal-overlay" id="userMenu">
-  <div class="modal" style="max-width:320px">
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
-      <div class="u-av" style="width:44px;height:44px;font-size:18px" id="umAv">?</div>
-      <div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800" id="umName">...</div><div style="font-size:12px;color:var(--text2)" id="umEmail">...</div></div>
+  <div class="modal" style="max-width:400px;max-height:85vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="u-av" style="width:44px;height:44px;font-size:18px" id="umAv">?</div>
+        <div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800" id="umName">...</div><div style="font-size:12px;color:var(--text2)" id="umEmail">...</div></div>
+      </div>
+      <button class="btn-icon" onclick="closeUserMenu()">✕</button>
     </div>
-    <button class="btn btn-ghost" style="width:100%;margin-bottom:8px" onclick="rerunOnboarding()">🤖 Re-configurar con IA</button>
-    <button class="btn btn-ghost" style="width:100%;margin-bottom:8px" onclick="abrirGestorCategorias()">🏷 Gestionar categorías</button>
-    <button class="btn btn-ghost" style="width:100%;margin-bottom:8px" onclick="exportJSON()">⬇ Backup JSON</button>
-    <button class="btn btn-danger" style="width:100%" onclick="doLogout()">Salir</button>
-    <div style="text-align:center;margin-top:12px"><button class="btn-icon" onclick="closeUserMenu()">Cerrar</button></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px">
+      <button class="btn btn-ghost btn-sm" onclick="rerunOnboarding()">🤖 Re-config</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportJSON()">⬇ Backup</button>
+      <button class="btn btn-ghost btn-sm" onclick="importJSON()">⬆ Importar</button>
+      <button class="btn btn-success btn-sm" onclick="exportCSV()">⬇ CSV</button>
+    </div>
+
+    <hr class="div">
+
+    <div id="userMenuConfig">
+      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:14px">⚙️ Configuración</div>
+      <div class="form-grid" style="margin-bottom:12px">
+        <div class="form-group"><label class="form-label">Ingreso mensual ($)</label><input type="number" id="cfgIngreso" onchange="saveConfig()"></div>
+        <div class="form-group"><label class="form-label">Límite ocio ($)</label><input type="number" id="cfgOcio" onchange="saveConfig()"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="form-label">Motor de IA</label>
+        <select id="cfgAiProvider" onchange="saveConfig()">
+          <option value="claude">🟣 Claude (Anthropic)</option>
+          <option value="openai">🟢 ChatGPT (OpenAI)</option>
+        </select>
+      </div>
+      <div id="aiProviderBadge" style="font-size:11px;color:var(--text3);margin-bottom:12px"></div>
+      <div id="cfgGastosFijos"></div>
+    </div>
+
+    <hr class="div">
+    <input type="file" id="impFile" accept=".json" onchange="importJSONFile(event)" style="display:none">
+    <button class="btn btn-danger" style="width:100%" onclick="doLogout()">🚪 Cerrar sesión</button>
   </div>
 </div>
 
@@ -1075,56 +1108,6 @@
   </div>
 </div>
 
-
-<!-- Modal Lista de Categorías -->
-<div class="modal-overlay" id="modalCategorias">
-  <div class="modal" style="max-width:480px;max-height:85vh;display:flex;flex-direction:column">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div class="modal-title" style="margin:0">🏷 Mis categorías</div>
-      <button class="btn-icon" onclick="cerrarGestorCategorias()">✕</button>
-    </div>
-    <p style="font-size:12px;color:var(--text3);margin-bottom:14px">Personaliza las categorías para clasificar tus movimientos. Edita, crea nuevas o elimina las que no uses.</p>
-    <div style="display:flex;gap:8px;margin-bottom:14px">
-      <button class="btn btn-primary btn-sm" style="flex:1" onclick="abrirModalCategoria()">+ Nueva categoría</button>
-      <button class="btn btn-ghost btn-sm" onclick="restaurarCategoriasDefault()">↺ Restaurar</button>
-    </div>
-    <div id="listaCategorias" style="flex:1;overflow-y:auto;padding-right:4px"></div>
-  </div>
-</div>
-
-<!-- Modal Editar/Crear Categoría -->
-<div class="modal-overlay" id="modalCategoriaEdit">
-  <div class="modal" style="max-width:360px">
-    <div class="modal-title">Categoría</div>
-    <div class="form-group" style="margin-bottom:12px">
-      <label class="form-label">Nombre</label>
-      <input type="text" id="catNombre" placeholder="Ej: Suscripciones">
-    </div>
-    <div class="form-grid" style="margin-bottom:12px">
-      <div class="form-group">
-        <label class="form-label">Emoji</label>
-        <input type="text" id="catEmoji" placeholder="💰" maxlength="4" style="text-align:center;font-size:20px">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Color</label>
-        <input type="color" id="catColor" value="#8892c4" style="padding:4px;height:44px;cursor:pointer">
-      </div>
-    </div>
-    <div class="form-group" style="margin-bottom:18px">
-      <label class="form-label">Tipo</label>
-      <select id="catTipo">
-        <option value="gasto">📉 Solo gasto</option>
-        <option value="ingreso">📈 Solo ingreso</option>
-        <option value="ambos">↕ Ambos</option>
-      </select>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-primary" onclick="guardarCategoria()">Guardar</button>
-      <button class="btn btn-ghost" onclick="document.getElementById('modalCategoriaEdit').classList.remove('open')">Cancelar</button>
-    </div>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <!-- Scripts -->
@@ -1154,7 +1137,7 @@ const app = initializeApp(FIREBASE_CONFIG);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-// Persistencia explícita: la sesión sobrevive a refrescos y cierres del navegador
+// Persistencia explícita: la sesión sobrevive refrescos, cierres del navegador y reinicios
 setPersistence(auth, browserLocalPersistence).catch(e => console.warn('setPersistence:', e));
 const DEMO_MODE = false;
 window._DEMO_MODE = DEMO_MODE;
@@ -1174,7 +1157,7 @@ window._dbSpaces = { db, collection, addDoc, getDocs, onSnapshot, query, orderBy
   limit, serverTimestamp, deleteDoc, updateDoc, setDoc, getDoc, doc };
 
 async function waitForApp() {
-  let r=25; while(typeof window._onUserReady!=='function'&&r-->0) await new Promise(x=>setTimeout(x,200));
+  let r=25; while(typeof window._onUserReady!=='function'&&r-- >0) await new Promise(x=>setTimeout(x,200));
   if(typeof window._onUserReady!=='function') throw new Error('app.js no cargó. Recarga la página.');
 }
 window.doLogin = async () => {
@@ -1223,27 +1206,30 @@ window.doLogout = async () => {
   location.reload();
 };
 
+function _hideSplash() {
+  const s = document.getElementById('splashLoader');
+  if (!s) return;
+  s.style.opacity = '0';
+  s.style.transition = 'opacity .3s';
+  setTimeout(() => s.remove(), 300);
+}
+
 onAuthStateChanged(auth, async user => {
-  const splash = document.getElementById('splashLoader');
   if (user) {
-    // Hay sesión activa — ir directo a la app
+    // Sesión activa — saltar landing, ir directo a la app
     if (!window.CURRENT_USER) {
       await waitForApp();
       window._onUserReady({ uid: user.uid, email: user.email, displayName: user.displayName });
     }
-    // Ocultar splash después de un breve delay para que la UI se asiente
-    if (splash) setTimeout(() => { splash.style.opacity = '0'; splash.style.transition = 'opacity .3s'; setTimeout(() => splash.remove(), 300); }, 200);
+    setTimeout(_hideSplash, 200);
   } else {
-    // No hay sesión — mostrar landing
-    if (splash) { splash.style.opacity = '0'; splash.style.transition = 'opacity .3s'; setTimeout(() => splash.remove(), 300); }
+    // Sin sesión — mostrar landing
+    _hideSplash();
   }
 });
 
-// Fallback: si Firebase tarda más de 3s, ocultar splash igual
-setTimeout(() => {
-  const splash = document.getElementById('splashLoader');
-  if (splash) { splash.style.opacity = '0'; splash.style.transition = 'opacity .3s'; setTimeout(() => splash.remove(), 300); }
-}, 3000);
+// Fallback: ocultar splash aunque Firebase se demore
+setTimeout(_hideSplash, 3000);
 </script>
 
 <script>

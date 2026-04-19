@@ -412,12 +412,23 @@ window.refreshSpaceList = async function() {
   if (!el) return;
   const spaces = await loadMySpaces();
   if (!spaces.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text3);text-align:center;padding:8px">Sin espacios aún</div>'; return; }
-  el.innerHTML = spaces.map(s => `
-    <div onclick="loadSpaceFromMenu('${s.id}')" style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;background:${SPACE.current?.id===s.id?'var(--green-dim)':'var(--s2)'};border:1px solid ${SPACE.current?.id===s.id?'rgba(34,197,94,.3)':'var(--border)'};margin-bottom:5px;transition:all .15s">
-      <span style="font-size:16px">${s.emoji||'💰'}</span>
-      <div style="flex:1"><div style="font-size:13px;font-weight:500">${window.esc(s.name)}</div><div style="font-size:11px;color:var(--text3)">${s.role}</div></div>
-      ${SPACE.current?.id===s.id?'<span style="font-size:10px;color:var(--green)">activo</span>':''}
-    </div>`).join('');
+  el.innerHTML = spaces.map(s => {
+    const isOwner = s.role === 'owner';
+    const isActive = SPACE.current?.id === s.id;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;background:${isActive?'var(--green-dim)':'var(--s2)'};border:1px solid ${isActive?'rgba(34,197,94,.3)':'var(--border)'};margin-bottom:5px;transition:all .15s">
+      <div onclick="loadSpaceFromMenu('${s.id}')" style="display:flex;align-items:center;gap:8px;flex:1;cursor:pointer;min-width:0">
+        <span style="font-size:16px">${s.emoji||'💰'}</span>
+        <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${window.esc(s.name)}</div><div style="font-size:11px;color:var(--text3)">${s.role}${isActive?' · activo':''}</div></div>
+      </div>
+      ${isOwner ? `<button onclick="window.deleteSpaceFromList('${s.id}','${window.esc(s.name).replace(/'/g,"\\'")}')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;padding:4px 6px;opacity:.7;transition:opacity .15s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7" title="Eliminar espacio">🗑</button>` : ''}
+    </div>`;
+  }).join('');
+};
+
+window.deleteSpaceFromList = async function(spaceId, name) {
+  if (typeof window.deleteSpace !== 'function') { window.showToast('Función no disponible', 'red'); return; }
+  const ok = await window.deleteSpace(spaceId);
+  if (ok) window.refreshSpaceList();
 };
 
 window.loadSpaceFromMenu = async function(id) {
